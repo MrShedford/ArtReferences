@@ -1,0 +1,18 @@
+@use '../../styles/variables' as v;
+
+// Google's button renders into a cross-origin iframe that arrives late and
+// carries its own dimensions. Reserving the box keeps the nav from jumping
+// when it lands.
+.slot {
+  min-height: 2.25rem;
+  min-width: 11rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.unavailable {
+  margin: 0;
+  font-size: 0.8rem;
+  color: v.$color-text-muted;
+}

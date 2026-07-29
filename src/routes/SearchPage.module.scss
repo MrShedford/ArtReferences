@@ -1,8 +1,4 @@
-@use './styles/variables' as v;
-
-.app {
-  min-height: 100vh;
-}
+@use '../styles/variables' as v;
 
 .header {
   display: flex;

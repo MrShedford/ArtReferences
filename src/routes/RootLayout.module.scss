@@ -1,0 +1,45 @@
+@use '../styles/variables' as v;
+@use '../styles/mixins' as m;
+
+.app {
+  min-height: 100vh;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: v.$space-md;
+  padding: v.$space-sm v.$space-md;
+  border-bottom: 1px solid v.$color-border;
+}
+
+.wordmark {
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  color: v.$color-text;
+  border-radius: v.$radius-sm;
+  @include m.focus-ring;
+}
+
+.navLink {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: v.$color-text-muted;
+  padding: v.$space-xs v.$space-sm;
+  border-radius: v.$radius-sm;
+  @include m.focus-ring;
+
+  &:hover {
+    color: v.$color-text;
+  }
+
+  // TanStack Router stamps this on the link matching the current route.
+  &[data-active='true'] {
+    color: v.$color-accent;
+  }
+}
+
+.spacer {
+  flex: 1 1 auto;
+}

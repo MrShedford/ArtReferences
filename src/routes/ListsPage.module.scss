@@ -1,0 +1,8 @@
+@use '../styles/variables' as v;
+
+.message {
+  text-align: center;
+  color: v.$color-text-muted;
+  padding: v.$space-xl v.$space-md;
+  margin: 0;
+}

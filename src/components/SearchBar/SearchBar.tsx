@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import styles from './SearchBar.module.scss'
 
 interface SearchBarProps {
@@ -6,9 +5,13 @@ interface SearchBarProps {
   onChange: (value: string) => void
 }
 
+/**
+ * Fully controlled. It used to mirror `value` into local draft state, which
+ * was fine while the only writer was the parent's useState — but the query
+ * now lives in the URL, so Back/forward can change it underneath the input
+ * and a second copy of the value would go stale.
+ */
 export function SearchBar({ value, onChange }: SearchBarProps) {
-  const [draft, setDraft] = useState(value)
-
   return (
     <div className={styles.searchBar}>
       <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden="true">
@@ -19,11 +22,8 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         type="search"
         className={styles.input}
         placeholder="Search artworks, artists, subjects..."
-        value={draft}
-        onChange={(e) => {
-          setDraft(e.target.value)
-          onChange(e.target.value)
-        }}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         aria-label="Search artworks across all museums"
       />
     </div>

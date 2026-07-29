@@ -1,0 +1,92 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.container {
+  position: relative;
+}
+
+// Matches the signed-in trigger's footprint so the nav doesn't shift when the
+// session resolves.
+.skeleton {
+  min-height: 2.25rem;
+  min-width: 8rem;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: v.$space-sm;
+  padding: v.$space-xs v.$space-sm;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: v.$color-text;
+  cursor: pointer;
+  font-size: 0.85rem;
+  @include m.focus-ring;
+
+  &:hover {
+    border-color: v.$color-border;
+  }
+}
+
+.avatar,
+.avatarFallback {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: v.$color-bg-elevated;
+  color: v.$color-accent;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.label {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + #{v.$space-xs});
+  right: 0;
+  // Below the Lightbox backdrop's 100, above the wall.
+  z-index: 20;
+  min-width: 10rem;
+  display: flex;
+  flex-direction: column;
+  background: v.$color-bg-elevated;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: v.$space-xs;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.item {
+  padding: v.$space-sm;
+  background: none;
+  border: none;
+  border-radius: v.$radius-sm;
+  color: v.$color-text;
+  text-align: left;
+  font-size: 0.85rem;
+  cursor: pointer;
+  @include m.focus-ring;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:disabled {
+    color: v.$color-text-muted;
+    cursor: default;
+  }
+}
