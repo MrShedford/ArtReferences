@@ -72,6 +72,36 @@ manually:
 $env:Path = 'C:\nvm4w\nodejs;C:\Program Files\Git\cmd;' + $env:Path
 ```
 
+## Deployment
+
+This is a static, client-only build — there's no server component, every
+museum API is called directly from the browser — so hosting is just
+"build it, serve the output":
+
+```powershell
+npm run build   # produces dist/
+```
+
+**Vercel** (or Netlify/Cloudflare Pages) auto-detects the Vite preset with
+zero configuration: build command `npm run build`, output directory
+`dist`, no `vercel.json` needed (there's also no client-side router, so no
+SPA rewrite rules to add).
+
+1. Push this repo to GitHub.
+2. In Vercel: **Add New Project** → import the repo. No build settings to change.
+3. Optional — before the first deploy, add whichever of these you have under
+   **Project Settings → Environment Variables**: `VITE_SMITHSONIAN_API_KEY`,
+   `VITE_HARVARD_API_KEY`, `VITE_EUROPEANA_API_KEY` (same keys as `.env.example`).
+   The app runs fine with none set — those sources just stay disabled.
+4. Deploy. Every push to `main` auto-deploys after this.
+
+**Caveat that no config avoids:** any `VITE_*` env var is compiled straight
+into the public JS bundle at build time. Once deployed, whichever API keys
+you set are visible to anyone who opens browser dev tools — this is
+inherent to a client-only app with no backend, not a Vercel-specific gap.
+For these free, rate-limited museum APIs the exposure is low-stakes, but
+it's worth knowing before treating any key here as a secret.
+
 ## Architecture
 
 - `src/types/artwork.ts` — the normalized `Artwork` shape every museum adapter
