@@ -14,19 +14,30 @@
  * an import. One file means there is nothing to share, so nothing to resolve.
  *
  * Routes (all relative to /api/user):
- *   POST   /session                  sign in with a Google ID token
- *   DELETE /session                  sign out
- *   GET    /me                       { user } or { user: null }
- *   PATCH  /me                       { displayName }
- *   GET    /lists                    all lists with item counts
- *   POST   /lists                    { name }
- *   PATCH  /lists/:id                { name }
- *   DELETE /lists/:id                (refuses the default list)
- *   GET    /lists/:id/items          artworks in one list
- *   POST   /lists/:id/items          { artwork }
- *   DELETE /lists/:id/items/:uid
- *   GET    /saved                    { uid: listId[] } for the whole account
- * `:id` also accepts the literal "default", so saving needs no prior lookup.
+ *   POST   /session                    sign in with a Google ID token
+ *   DELETE /session                    sign out
+ *   GET    /me                         { user } or { user: null }
+ *   PATCH  /me                         { displayName }
+ *   GET    /lists                      all lists with item counts
+ *   POST   /lists                      { name }
+ *   PATCH  /list?id=N                  { name }
+ *   DELETE /list?id=N                  (refuses the default list)
+ *   GET    /items?list=N               artworks in one list
+ *   POST   /items?list=N               { artwork }
+ *   DELETE /items?list=N&uid=X
+ *   GET    /saved                      { uid: listId[] } for the whole account
+ * `list`/`id` also accept the literal "default", so saving needs no prior lookup.
+ *
+ * EVERY PATH IS EXACTLY ONE SEGMENT DEEP, and that is load-bearing. Vercel
+ * resolves this file's [...path] as a *single* dynamic segment, not a true
+ * catch-all: /api/user/me reaches the function, but /api/user/lists/1 returns
+ * Vercel's own NOT_FOUND before any of this code runs. Local dev hid it
+ * completely, because the Connect middleware in vite.config.ts matches by
+ * prefix and happily passed nested paths through.
+ *
+ * So identifiers go in the query string instead, which is the same shape
+ * api/museum.ts already uses (/api/museum?source=...). If you add a route
+ * here, keep it one segment deep.
  */
 
 import { neon } from '@neondatabase/serverless'
@@ -654,8 +665,14 @@ async function getSavedMap(sql: Sql, userId: number): Promise<Response> {
   return json({ saved, truncated: false })
 }
 
-/** Resolves ":id" (numeric, or the literal "default") to a list this user owns. */
-async function resolveListId(sql: Sql, userId: number, param: string): Promise<number | null> {
+/** Resolves an id param (numeric, or the literal "default") to a list this user owns. */
+async function resolveListId(
+  sql: Sql,
+  userId: number,
+  param: string | null,
+): Promise<number | null> {
+  if (param === null) return null
+
   if (param === 'default') {
     const [row] = (await sql`
       select id from lists where user_id = ${userId} and is_default limit 1
@@ -729,10 +746,13 @@ async function route(method: string, request: Request): Promise<Response> {
     }
   }
 
-  const [first, second, third, fourth] = segments
+  // One segment only — see the header comment. Anything deeper never gets
+  // here in production anyway.
+  if (segments.length !== 1) return jsonError('Not found.', 404)
+  const route = segments[0]
 
   // ── /session ──
-  if (segments.length === 1 && first === 'session') {
+  if (route === 'session') {
     if (method === 'POST') return createSession(sql, request)
     if (method === 'DELETE') return noContent([['Set-Cookie', CLEAR_COOKIE]])
   }
@@ -740,7 +760,7 @@ async function route(method: string, request: Request): Promise<Response> {
   const userId = await readSession(request)
 
   // ── /me ── the only endpoint that answers when signed out.
-  if (segments.length === 1 && first === 'me') {
+  if (route === 'me') {
     if (method === 'GET') return getMe(sql, userId)
     if (method === 'PATCH') {
       if (userId === null) return jsonError('Sign in required.', 401)
@@ -752,35 +772,32 @@ async function route(method: string, request: Request): Promise<Response> {
   if (userId === null) return jsonError('Sign in required.', 401)
 
   // ── /saved ──
-  if (segments.length === 1 && first === 'saved' && method === 'GET') {
-    return getSavedMap(sql, userId)
-  }
+  if (route === 'saved' && method === 'GET') return getSavedMap(sql, userId)
 
   // ── /lists ──
-  if (segments.length === 1 && first === 'lists') {
+  if (route === 'lists') {
     if (method === 'GET') return getLists(sql, userId)
     if (method === 'POST') return createList(sql, userId, request)
   }
 
-  if (first === 'lists' && second !== undefined) {
-    const listId = await resolveListId(sql, userId, second)
+  // ── /list?id=N ──
+  if (route === 'list') {
+    const listId = await resolveListId(sql, userId, url.searchParams.get('id'))
     if (listId === null) return jsonError('List not found.', 404)
+    if (method === 'PATCH') return renameList(sql, userId, listId, request)
+    if (method === 'DELETE') return deleteList(sql, userId, listId)
+  }
 
-    // ── /lists/:id ──
-    if (segments.length === 2) {
-      if (method === 'PATCH') return renameList(sql, userId, listId, request)
-      if (method === 'DELETE') return deleteList(sql, userId, listId)
-    }
-
-    // ── /lists/:id/items ──
-    if (segments.length === 3 && third === 'items') {
-      if (method === 'GET') return getListItems(sql, listId)
-      if (method === 'POST') return saveItem(sql, listId, request)
-    }
-
-    // ── /lists/:id/items/:uid ──
-    if (segments.length === 4 && third === 'items' && method === 'DELETE') {
-      return deleteItem(sql, listId, decodeURIComponent(fourth))
+  // ── /items?list=N[&uid=X] ──
+  if (route === 'items') {
+    const listId = await resolveListId(sql, userId, url.searchParams.get('list'))
+    if (listId === null) return jsonError('List not found.', 404)
+    if (method === 'GET') return getListItems(sql, listId)
+    if (method === 'POST') return saveItem(sql, listId, request)
+    if (method === 'DELETE') {
+      const uid = url.searchParams.get('uid')
+      if (!uid) return jsonError('Missing uid.', 400)
+      return deleteItem(sql, listId, uid)
     }
   }
 

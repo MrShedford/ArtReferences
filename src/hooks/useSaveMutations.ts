@@ -49,16 +49,19 @@ export function useToggleSave() {
     // Async so both branches share one return type — otherwise the union of
     // Promise<void> and Promise<{uid}> also breaks onMutate's context inference.
     mutationFn: async ({ artwork, listId, isSaved }: ToggleArgs): Promise<void> => {
+      // Ids go in the query string, not the path: Vercel only routes one
+      // segment past /api/user. See the header comment in api/user/[...path].ts.
       if (isSaved) {
-        await userApi<void>(`/api/user/lists/${listId}/items/${encodeURIComponent(artwork.uid)}`, {
-          method: 'DELETE',
-        })
+        await userApi<void>(
+          `/api/user/items?list=${listId}&uid=${encodeURIComponent(artwork.uid)}`,
+          { method: 'DELETE' },
+        )
         return
       }
       // Stripped client-side as well as server-side: it's a 1-2 KB base64 blob
       // on AIC results and there's no reason to put it on the wire.
       const { blurDataUrl: _blurDataUrl, ...rest } = artwork
-      await userApi<{ uid: string }>(`/api/user/lists/${listId}/items`, {
+      await userApi<{ uid: string }>(`/api/user/items?list=${listId}`, {
         method: 'POST',
         body: { artwork: rest },
       })

@@ -45,8 +45,10 @@ export function useLists() {
 export function useListItems(listId: number | null) {
   return useQuery<{ items: SavedItem[] }>({
     queryKey: ['list-items', listId],
+    // Ids go in the query string, not the path: Vercel only routes one
+    // segment past /api/user. See the header comment in api/user/[...path].ts.
     queryFn: ({ signal }) =>
-      userApi<{ items: SavedItem[] }>(`/api/user/lists/${listId}/items`, { signal }),
+      userApi<{ items: SavedItem[] }>(`/api/user/items?list=${listId}`, { signal }),
     enabled: listId !== null,
     staleTime: 60 * 1000,
   })
@@ -65,7 +67,7 @@ export function useRenameList() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) =>
-      userApi<{ list: List }>(`/api/user/lists/${id}`, { method: 'PATCH', body: { name } }),
+      userApi<{ list: List }>(`/api/user/list?id=${id}`, { method: 'PATCH', body: { name } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lists'] }),
   })
 }
@@ -73,7 +75,7 @@ export function useRenameList() {
 export function useDeleteList() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => userApi<void>(`/api/user/lists/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: number) => userApi<void>(`/api/user/list?id=${id}`, { method: 'DELETE' }),
     onSuccess: (_result, id) => {
       void queryClient.invalidateQueries({ queryKey: ['lists'] })
       // Its items are gone from every card's saved state too.
