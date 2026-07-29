@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Artwork, SourceId } from '../types/artwork'
 import { getSavedSourceSearchParam, parseEnabledSources, saveSourceSearchParam, searchRoute, serializeEnabledSources } from '../router'
 import { useArtworkSearch } from '../hooks/useArtworkSearch'
@@ -40,13 +40,18 @@ export function SearchPage() {
 
   const enabledSourceIds = useMemo(() => parseEnabledSources(sources), [sources])
   const { ids: configuredSourceIds, isPending: isConfigPending } = useConfiguredSources()
+  const hasLoadedSavedSources = useRef(false)
 
   useEffect(() => {
-    if (sources !== undefined) return
+    if (sources !== undefined || hasLoadedSavedSources.current) return
 
     const savedSources = getSavedSourceSearchParam()
-    if (savedSources === undefined) return
+    if (savedSources === undefined) {
+      hasLoadedSavedSources.current = true
+      return
+    }
 
+    hasLoadedSavedSources.current = true
     void navigate({
       search: (prev) => ({ ...prev, sources: savedSources }),
       replace: true,
@@ -54,6 +59,7 @@ export function SearchPage() {
   }, [navigate, sources])
 
   useEffect(() => {
+    if (!hasLoadedSavedSources.current) return
     saveSourceSearchParam(sources)
   }, [sources])
 
