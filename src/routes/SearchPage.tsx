@@ -114,7 +114,12 @@ export function SearchPage() {
       </header>
 
       <main>
-        {isLoading && <p className={styles.loading}>Loading artwork...</p>}
+        {isLoading && (
+          <div className={styles.loading} role="status" aria-live="polite">
+            <span className={styles.spinner} aria-hidden="true" />
+            <span className={styles.loadingLabel}>Loading artwork…</span>
+          </div>
+        )}
         {!isLoading && artworks.length === 0 && (
           <p className={styles.loading}>
             No results. Try a different search or enable more museums.
