@@ -4,7 +4,7 @@ import { PAGE_SIZE, type MuseumSource } from './types'
 
 // Smithsonian Open Access uses a free, instant api.data.gov key (unlike
 // Harvard's manual-approval form). The key is held server-side and injected
-// by /api/museum — see api/_shared/sources.ts.
+// by /api/museum — see the SOURCES table in api/museum.ts.
 
 interface SmithsonianMediaVariant {
   label?: string

@@ -1,0 +1,140 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.container {
+  position: relative;
+}
+
+.group {
+  display: flex;
+  align-items: stretch;
+  background: rgba(14, 14, 16, 0.8);
+  backdrop-filter: blur(4px);
+  border: 1px solid v.$color-border;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.save,
+.chevron {
+  display: grid;
+  place-items: center;
+  padding: 0.3rem 0.5rem;
+  background: none;
+  border: none;
+  color: v.$color-text;
+  cursor: pointer;
+  @include m.focus-ring;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.save[data-saved='true'] {
+  color: v.$color-accent;
+}
+
+.chevron {
+  border-left: 1px solid v.$color-border;
+}
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + #{v.$space-xs});
+  right: 0;
+  // Above sibling cards, below the Lightbox backdrop's 100.
+  z-index: 20;
+  min-width: 12rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: v.$color-bg-elevated;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: v.$space-xs;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  text-align: left;
+
+  &[data-drop='up'] {
+    top: auto;
+    bottom: calc(100% + #{v.$space-xs});
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: v.$space-sm;
+  width: 100%;
+  padding: v.$space-sm;
+  background: none;
+  border: none;
+  border-radius: v.$radius-sm;
+  color: v.$color-text;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  @include m.focus-ring;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.check {
+  width: 1rem;
+  flex-shrink: 0;
+  color: v.$color-accent;
+}
+
+.itemName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.separator {
+  height: 1px;
+  background: v.$color-border;
+  margin: v.$space-xs 0;
+}
+
+.createForm {
+  display: flex;
+  gap: v.$space-xs;
+  padding: v.$space-xs;
+}
+
+.createInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: v.$color-text;
+  background: v.$color-bg;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: v.$space-xs;
+  @include m.focus-ring;
+}
+
+.createSubmit {
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: v.$space-xs v.$space-sm;
+  background: v.$color-accent;
+  border: none;
+  border-radius: v.$radius-sm;
+  color: #1a1206;
+  font-weight: 600;
+  cursor: pointer;
+  @include m.focus-ring;
+}

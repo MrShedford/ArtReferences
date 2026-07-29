@@ -1,8 +1,155 @@
 @use '../styles/variables' as v;
+@use '../styles/mixins' as m;
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-md;
+  padding: v.$space-lg v.$space-md;
+  border-bottom: 1px solid v.$color-border;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: v.$space-md;
+}
+
+.avatar,
+.avatarFallback {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  background: v.$color-bg-elevated;
+}
+
+.email {
+  margin: 0;
+  font-size: 0.8rem;
+  color: v.$color-text-muted;
+}
+
+.listRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: v.$space-sm;
+}
+
+// Same visual language as SourceFilter's museum chips.
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-xs;
+  padding: v.$space-xs v.$space-md;
+  background: v.$color-bg-elevated;
+  border: 1px solid v.$color-border;
+  border-radius: 999px;
+  color: v.$color-text-muted;
+  font-size: 0.85rem;
+  cursor: pointer;
+  @include m.focus-ring;
+
+  &:hover {
+    color: v.$color-text;
+  }
+
+  &[data-active='true'] {
+    border-color: v.$color-accent;
+    color: v.$color-accent;
+  }
+}
+
+.count {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.newListForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: v.$space-sm;
+  align-items: center;
+}
+
+.newListInput {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: v.$color-text;
+  background: v.$color-bg-elevated;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: v.$space-xs v.$space-sm;
+  min-width: 12rem;
+  @include m.focus-ring;
+}
+
+.newListButton,
+.secondary {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: v.$space-xs v.$space-md;
+  border-radius: v.$radius-sm;
+  cursor: pointer;
+  @include m.focus-ring;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.newListButton {
+  background: v.$color-accent;
+  border: 1px solid v.$color-accent;
+  color: #1a1206;
+  font-weight: 600;
+}
+
+.secondary {
+  background: none;
+  border: 1px solid v.$color-border;
+  color: v.$color-text-muted;
+
+  &:hover:not(:disabled) {
+    color: v.$color-text;
+  }
+}
+
+.message,
+.muted {
+  color: v.$color-text-muted;
+}
 
 .message {
   text-align: center;
-  color: v.$color-text-muted;
   padding: v.$space-xl v.$space-md;
   margin: 0;
+}
+
+.muted {
+  font-size: 0.85rem;
+}
+
+.error {
+  margin: 0;
+  color: v.$color-error;
+  font-size: 0.85rem;
+}
+
+.signedOut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: v.$space-md;
+  padding: v.$space-xl v.$space-md;
+}
+
+.signedOutHeading {
+  margin: 0;
+  font-size: 1.4rem;
 }

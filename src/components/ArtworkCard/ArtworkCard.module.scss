@@ -3,6 +3,13 @@
 
 .card {
   position: relative;
+  // No overflow: hidden here. It used to live on this element to clip the
+  // image's corners, but it would also clip the save menu, which has to escape
+  // the card's box. It moved down to .openButton, which is what actually
+  // wraps the image.
+}
+
+.openButton {
   display: block;
   width: 100%;
   background: v.$color-bg-elevated;
@@ -12,10 +19,41 @@
   cursor: pointer;
   padding: 0;
   @include m.focus-ring;
+}
 
-  &:hover .overlay {
+.card:hover .overlay {
+  opacity: 1;
+}
+
+// While a menu is open this card has to paint over its later siblings, which
+// would otherwise win on document order alone.
+.card:has([data-open='true']) {
+  z-index: 10;
+}
+
+.actions {
+  position: absolute;
+  top: v.$space-sm;
+  right: v.$space-sm;
+
+  // Hover-reveal is a pointer-device affordance. Revealed also by keyboard
+  // focus, by an open menu, and by being saved — so a saved card always
+  // advertises that it is.
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  // No hover on touch, and the .overlay never appears there either, so the
+  // control has to be permanently visible or it's unreachable.
+  @media (hover: none) {
     opacity: 1;
   }
+}
+
+.card:hover .actions,
+.card:focus-within .actions,
+.actions:has([data-open='true']),
+.actions:has([data-saved='true']) {
+  opacity: 1;
 }
 
 // aspect-ratio is set inline per card, so the box's height is known before the

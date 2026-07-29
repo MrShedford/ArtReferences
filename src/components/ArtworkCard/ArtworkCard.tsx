@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Artwork } from '../../types/artwork'
 import { DEFAULT_ASPECT_RATIO } from '../../lib/distributeIntoColumns'
+import { SaveButton } from '../SaveButton/SaveButton'
 import styles from './ArtworkCard.module.scss'
 
 interface ArtworkCardProps {
@@ -38,34 +39,44 @@ export function ArtworkCard({ artwork, onOpen }: ArtworkCardProps) {
     setRatio(actual)
   }
 
+  // The root used to be the <button> itself. It can't be: HTML forbids nesting
+  // interactive content inside a button, so the Save control had nowhere legal
+  // to go. Making it a sibling also means its clicks never reach the open
+  // handler, so nothing here needs stopPropagation.
   return (
-    <button
-      type="button"
-      className={styles.card}
-      onClick={() => onOpen(artwork)}
-      aria-label={`${artwork.title}${artwork.artist ? `, ${artwork.artist}` : ''} — ${artwork.sourceLabel}`}
-    >
-      <div
-        className={styles.imageWrap}
-        style={{
-          aspectRatio: String(ratio),
-          backgroundImage: artwork.blurDataUrl ? `url(${artwork.blurDataUrl})` : undefined,
-        }}
+    <article className={styles.card}>
+      <button
+        type="button"
+        className={styles.openButton}
+        onClick={() => onOpen(artwork)}
+        aria-label={`${artwork.title}${artwork.artist ? `, ${artwork.artist}` : ''} — ${artwork.sourceLabel}`}
       >
-        <img
-          src={artwork.thumbUrl}
-          alt={artwork.alt || artwork.title}
-          loading="lazy"
-          decoding="async"
-          className={styles.image}
-          onLoad={handleLoad}
-        />
+        <div
+          className={styles.imageWrap}
+          style={{
+            aspectRatio: String(ratio),
+            backgroundImage: artwork.blurDataUrl ? `url(${artwork.blurDataUrl})` : undefined,
+          }}
+        >
+          <img
+            src={artwork.thumbUrl}
+            alt={artwork.alt || artwork.title}
+            loading="lazy"
+            decoding="async"
+            className={styles.image}
+            onLoad={handleLoad}
+          />
+        </div>
+        <div className={styles.overlay}>
+          <p className={styles.title}>{artwork.title}</p>
+          {artwork.artist && <p className={styles.artist}>{artwork.artist}</p>}
+          <p className={styles.source}>{artwork.sourceLabel}</p>
+        </div>
+      </button>
+
+      <div className={styles.actions}>
+        <SaveButton artwork={artwork} />
       </div>
-      <div className={styles.overlay}>
-        <p className={styles.title}>{artwork.title}</p>
-        {artwork.artist && <p className={styles.artist}>{artwork.artist}</p>}
-        <p className={styles.source}>{artwork.sourceLabel}</p>
-      </div>
-    </button>
+    </article>
   )
 }

@@ -1,0 +1,73 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-xs;
+  align-items: flex-start;
+  min-height: 3.25rem;
+}
+
+.skeleton {
+  display: block;
+  width: 10rem;
+  height: 1.5rem;
+  border-radius: v.$radius-sm;
+  background: v.$color-bg-elevated;
+}
+
+.name {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.edit {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-xs;
+  padding: 0;
+  background: none;
+  border: none;
+  color: v.$color-text-muted;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: v.$radius-sm;
+  @include m.focus-ring;
+
+  &:hover {
+    color: v.$color-accent;
+  }
+}
+
+.icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.input {
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: v.$color-text;
+  background: v.$color-bg-elevated;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: v.$space-xs v.$space-sm;
+  min-width: 16rem;
+  @include m.focus-ring;
+
+  &[aria-invalid='true'] {
+    border-color: v.$color-error;
+  }
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: v.$color-text-muted;
+}
+
+.error {
+  font-size: 0.75rem;
+  color: v.$color-error;
+}
