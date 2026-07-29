@@ -145,9 +145,21 @@ rewrite rules to add.
   available source via `Promise.allSettled` (so one broken museum can't
   block the rest), interleaves results round-robin, and paginates via
   React Query's `useInfiniteQuery`.
-- `src/components/MasonryWall` — CSS multi-column masonry. Chosen over a
-  JS masonry library because most source APIs don't reliably report image
-  dimensions, so a measuring layout engine would thrash on every image load.
+- `src/components/MasonryWall` — fixed columns filled by
+  `src/lib/distributeIntoColumns.ts`, which assigns each artwork to the
+  shortest column using a height *estimated* from its aspect ratio. Nothing is
+  measured from the DOM, so there's no read-back thrash — the objection that
+  rules out a measuring masonry library. This replaced CSS `column-count`:
+  balanced multicol re-fragments the entire wall whenever a card changes height
+  or a page is appended, so cards migrate between columns and the wall jumps
+  under the cursor. Fixed columns are independent stacks, so appending touches
+  only one column's bottom and a resize only moves cards below it.
+  Column count is in `src/hooks/useColumnCount.ts` and must stay in step with
+  the `$bp-*` breakpoints in `src/styles/_variables.scss`.
+- `src/components/ArtworkCard` — always reserves height via `aspect-ratio`:
+  exact for the 4 sources that report dimensions, else a 3:4 placeholder that
+  snaps to the real ratio on load. Resolved ratios are cached by uid so the
+  snap doesn't replay when cards remount (column count change, filter toggle).
 - `src/lib/fetchJson.ts` / `pLimit.ts` — a timeout-wrapped fetch tagged with
   the failing source's id, and a small concurrency limiter used by the
   Met and Rijksmuseum adapters' N+1 detail fetches.

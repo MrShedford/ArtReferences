@@ -5,8 +5,6 @@
   position: relative;
   display: block;
   width: 100%;
-  break-inside: avoid;
-  margin-bottom: v.$space-md;
   background: v.$color-bg-elevated;
   border: none;
   border-radius: v.$radius-md;
@@ -20,15 +18,27 @@
   }
 }
 
+// aspect-ratio is set inline per card, so the box's height is known before the
+// image arrives and the wall never has to reflow around a late-decoding image.
 .imageWrap {
+  position: relative;
   width: 100%;
   background-size: cover;
   background-position: center;
 }
 
+// Pinned to the reserved box rather than sized from its own intrinsic ratio.
+// It used to be `width: 100%; height: auto`, which meant the image ignored the
+// wrapper — so whenever a source's reported dimensions disagreed with the
+// thumbnail actually delivered, it overflowed or under-filled the slot.
+// `cover` only crops during the placeholder phase for unknown-ratio sources;
+// once onLoad reports the true ratio the box matches the image exactly.
 .image {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   border-radius: v.$radius-md;
 }
 

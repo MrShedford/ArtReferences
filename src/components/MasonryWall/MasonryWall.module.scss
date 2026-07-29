@@ -1,29 +1,31 @@
 @use '../../styles/variables' as v;
-@use '../../styles/mixins' as m;
 
-// Plain CSS multi-column masonry: most museum APIs don't reliably report
-// image dimensions, so a JS layout engine that measures/repositions would
-// thrash on every image load. Columns fill top-to-bottom on their own and
-// need no measurement.
+// Fixed flex columns, filled by distributeIntoColumns() rather than by the
+// browser. CSS `column-count` was the original approach, but balanced multicol
+// re-fragments every child whenever one changes height or items are appended,
+// so cards jump between columns mid-scroll. Here a column is an independent
+// stack: appending touches only its bottom, and a card resizing only moves the
+// cards below it in that one column. Nothing is measured, so nothing thrashes.
+//
+// Column count lives in src/hooks/useColumnCount.ts and must stay in step with
+// the $bp-* breakpoints in styles/_variables.scss.
 .wall {
-  column-count: 2;
-  column-gap: v.$space-md;
+  display: flex;
+  align-items: flex-start;
+  gap: v.$space-md;
   padding: v.$space-md;
+}
 
-  @include m.respond-to(md) {
-    column-count: 3;
-  }
-
-  @include m.respond-to(lg) {
-    column-count: 4;
-  }
-
-  @include m.respond-to(xl) {
-    column-count: 5;
-  }
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-md;
+  // Equal share of the row regardless of content, and min-width:0 stops a wide
+  // card from forcing its column past that share.
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .sentinel {
-  break-inside: avoid;
   height: 1px;
 }

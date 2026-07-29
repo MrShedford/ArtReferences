@@ -19,7 +19,7 @@ function App() {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null)
 
   const debouncedQuery = useDebouncedValue(query, 350)
-  const configuredSourceIds = useConfiguredSources()
+  const { ids: configuredSourceIds, isPending: isConfigPending } = useConfiguredSources()
 
   const {
     artworks,
@@ -29,7 +29,7 @@ function App() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useArtworkSearch(debouncedQuery, enabledSourceIds, configuredSourceIds)
+  } = useArtworkSearch(debouncedQuery, enabledSourceIds, configuredSourceIds, isConfigPending)
 
   const toggleSource = useCallback((id: SourceId) => {
     setEnabledSourceIds((prev) => {
@@ -44,6 +44,13 @@ function App() {
     () => Boolean(hasNextPage) && !isFetchingNextPage,
     [hasNextPage, isFetchingNextPage],
   )
+
+  // Stable identity: an inline arrow here made the sentinel's
+  // IntersectionObserver rebuild on every render, which re-fired it and
+  // spun up a fetch loop. See useInfiniteScrollSentinel.
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage()
+  }, [fetchNextPage])
 
   return (
     <div className={styles.app}>
@@ -71,7 +78,7 @@ function App() {
         <MasonryWall
           artworks={artworks}
           onOpen={setSelectedArtwork}
-          onLoadMore={() => fetchNextPage()}
+          onLoadMore={handleLoadMore}
           canLoadMore={canLoadMore}
         />
         {isFetchingNextPage && <p className={styles.loading}>Loading more...</p>}

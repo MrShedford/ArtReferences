@@ -9,6 +9,11 @@
   padding: 0;
   font-size: 0.8rem;
   color: v.$color-text-muted;
+  // Reserve two rows. Counts and "failed" labels appear one source at a time
+  // as each request settles; without this the list rewraps onto another line
+  // and grows the header, pushing the whole wall down while you're scrolling.
+  min-height: 2.75rem;
+  align-content: flex-start;
 }
 
 .item {

@@ -47,6 +47,7 @@ export function useArtworkSearch(
   query: string,
   enabledSourceIds: Set<SourceId>,
   configuredSourceIds: Set<SourceId>,
+  isConfigPending = false,
 ) {
   const activeSources = useMemo(
     () =>
@@ -90,7 +91,11 @@ export function useArtworkSearch(
       if (lastPage.artworks.length === 0) return undefined
       return allPages.length
     },
-    enabled: activeSources.length > 0,
+    // Wait for /api/config: activeSources feeds the queryKey, so starting
+    // before it resolves fetches page 0 with the keyless sources only, then
+    // throws that away and refetches under a new key — a visible full-wall
+    // rebuild a second into the session.
+    enabled: !isConfigPending && activeSources.length > 0,
     staleTime: 5 * 60 * 1000,
   })
 

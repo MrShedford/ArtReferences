@@ -19,8 +19,15 @@ const EMPTY: Set<SourceId> = new Set()
  * safe default: those sources render disabled and the seven keyless ones keep
  * working, exactly as when no keys are set at all.
  */
-export function useConfiguredSources(): Set<SourceId> {
-  const { data } = useQuery<ConfigResponse>({
+export interface ConfiguredSources {
+  ids: Set<SourceId>
+  /** True until /api/config settles. Callers should hold off querying until
+   *  then, or the first page is fetched twice and the wall visibly rebuilds. */
+  isPending: boolean
+}
+
+export function useConfiguredSources(): ConfiguredSources {
+  const { data, isPending } = useQuery<ConfigResponse>({
     queryKey: ['source-config'],
     queryFn: async ({ signal }) => {
       const res = await fetch('/api/config', { signal })
@@ -32,5 +39,7 @@ export function useConfiguredSources(): Set<SourceId> {
     refetchOnWindowFocus: false,
   })
 
-  return useMemo(() => (data ? new Set(data.configured) : EMPTY), [data])
+  const ids = useMemo(() => (data ? new Set(data.configured) : EMPTY), [data])
+
+  return useMemo(() => ({ ids, isPending }), [ids, isPending])
 }

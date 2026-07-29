@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { Artwork } from '../../types/artwork'
+import { DEFAULT_ASPECT_RATIO } from '../../lib/distributeIntoColumns'
 import styles from './ArtworkCard.module.scss'
 
 interface ArtworkCardProps {
@@ -6,9 +8,35 @@ interface ArtworkCardProps {
   onOpen: (artwork: Artwork) => void
 }
 
+/**
+ * Ratios discovered from decoded images, keyed by artwork uid.
+ *
+ * Cards unmount and remount whenever the column count changes or a source
+ * filter is toggled. Without this, every such remount would replay the
+ * placeholder-then-snap shift for the 6 of 10 sources that don't report
+ * dimensions. Module-level so it survives the remount; bounded in practice by
+ * the number of artworks the session has scrolled past.
+ */
+const resolvedRatios = new Map<string, number>()
+
 export function ArtworkCard({ artwork, onOpen }: ArtworkCardProps) {
-  const aspectRatio =
-    artwork.width && artwork.height ? `${artwork.width} / ${artwork.height}` : undefined
+  // Always reserve space. A known ratio is exact; otherwise a portrait-ish
+  // placeholder holds the slot until the image decodes and reports its own.
+  // Previously this was left undefined, so the card was 0px tall until load.
+  const [ratio, setRatio] = useState<number>(
+    () =>
+      (artwork.width && artwork.height ? artwork.width / artwork.height : undefined) ??
+      resolvedRatios.get(artwork.uid) ??
+      DEFAULT_ASPECT_RATIO,
+  )
+
+  const handleLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget
+    if (!naturalWidth || !naturalHeight) return
+    const actual = naturalWidth / naturalHeight
+    resolvedRatios.set(artwork.uid, actual)
+    setRatio(actual)
+  }
 
   return (
     <button
@@ -20,7 +48,7 @@ export function ArtworkCard({ artwork, onOpen }: ArtworkCardProps) {
       <div
         className={styles.imageWrap}
         style={{
-          aspectRatio,
+          aspectRatio: String(ratio),
           backgroundImage: artwork.blurDataUrl ? `url(${artwork.blurDataUrl})` : undefined,
         }}
       >
@@ -28,7 +56,9 @@ export function ArtworkCard({ artwork, onOpen }: ArtworkCardProps) {
           src={artwork.thumbUrl}
           alt={artwork.alt || artwork.title}
           loading="lazy"
+          decoding="async"
           className={styles.image}
+          onLoad={handleLoad}
         />
       </div>
       <div className={styles.overlay}>
