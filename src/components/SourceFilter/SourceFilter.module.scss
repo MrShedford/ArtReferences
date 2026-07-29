@@ -1,0 +1,47 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: v.$space-sm;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-xs;
+  background: v.$color-bg-elevated;
+  border: 1px solid v.$color-border;
+  border-radius: 999px;
+  padding: v.$space-xs v.$space-md;
+  font-size: 0.85rem;
+  color: v.$color-text-muted;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  @include m.focus-ring;
+
+  &:hover:not(:disabled) {
+    border-color: v.$color-text-muted;
+    color: v.$color-text;
+  }
+
+  &[data-active='true'] {
+    background: v.$color-accent;
+    border-color: v.$color-accent;
+    color: #1a1305;
+    font-weight: 600;
+  }
+
+  &[data-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.keyBadge {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}

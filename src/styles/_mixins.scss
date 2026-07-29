@@ -1,0 +1,20 @@
+@use 'variables' as v;
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: v.$bp-sm) { @content; }
+  } @else if $breakpoint == md {
+    @media (min-width: v.$bp-md) { @content; }
+  } @else if $breakpoint == lg {
+    @media (min-width: v.$bp-lg) { @content; }
+  } @else if $breakpoint == xl {
+    @media (min-width: v.$bp-xl) { @content; }
+  }
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid v.$color-accent;
+    outline-offset: 2px;
+  }
+}

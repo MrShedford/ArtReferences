@@ -1,0 +1,109 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: v.$space-lg;
+  z-index: 100;
+}
+
+.dialog {
+  position: relative;
+  background: v.$color-bg-elevated;
+  border-radius: v.$radius-md;
+  max-width: 70rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+
+  @include m.respond-to(md) {
+    flex-direction: row;
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: v.$space-sm;
+  right: v.$space-sm;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: v.$color-text;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  z-index: 1;
+  @include m.focus-ring;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.75);
+  }
+}
+
+.imageColumn {
+  flex: 1 1 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  min-width: 0;
+
+  img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+  }
+}
+
+.infoColumn {
+  flex: 1 1 40%;
+  padding: v.$space-lg;
+  overflow-y: auto;
+}
+
+.title {
+  margin: 0 0 v.$space-xs;
+  font-size: 1.4rem;
+}
+
+.artist {
+  margin: 0 0 v.$space-md;
+  color: v.$color-text-muted;
+  font-size: 1rem;
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: v.$space-xs v.$space-md;
+  margin: 0 0 v.$space-lg;
+  font-size: 0.9rem;
+
+  dt {
+    color: v.$color-text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.link {
+  display: inline-block;
+  color: v.$color-accent;
+  text-decoration: none;
+  font-weight: 600;
+  @include m.focus-ring;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

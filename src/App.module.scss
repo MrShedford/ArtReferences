@@ -1,0 +1,31 @@
+@use './styles/variables' as v;
+
+.app {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-md;
+  padding: v.$space-lg v.$space-md;
+  border-bottom: 1px solid v.$color-border;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.subheading {
+  margin: -#{v.$space-sm} 0 0;
+  color: v.$color-text-muted;
+  font-size: 0.95rem;
+}
+
+.loading {
+  text-align: center;
+  color: v.$color-text-muted;
+  padding: v.$space-lg;
+  margin: 0;
+}

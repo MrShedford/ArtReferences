@@ -1,0 +1,24 @@
+// Breakpoints for the responsive masonry column counts.
+$bp-sm: 480px;
+$bp-md: 768px;
+$bp-lg: 1100px;
+$bp-xl: 1500px;
+
+// Dark-first palette — artwork reads best against a near-black background.
+$color-bg: #0e0e10;
+$color-bg-elevated: #18181b;
+$color-border: #2a2a2e;
+$color-text: #f2f2f2;
+$color-text-muted: #a1a1aa;
+$color-accent: #e8a33d;
+$color-error: #f0645c;
+$color-success: #5fb87a;
+
+$radius-sm: 6px;
+$radius-md: 10px;
+
+$space-xs: 0.25rem;
+$space-sm: 0.5rem;
+$space-md: 1rem;
+$space-lg: 1.5rem;
+$space-xl: 2.5rem;

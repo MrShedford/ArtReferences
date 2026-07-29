@@ -1,0 +1,29 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+// Plain CSS multi-column masonry: most museum APIs don't reliably report
+// image dimensions, so a JS layout engine that measures/repositions would
+// thrash on every image load. Columns fill top-to-bottom on their own and
+// need no measurement.
+.wall {
+  column-count: 2;
+  column-gap: v.$space-md;
+  padding: v.$space-md;
+
+  @include m.respond-to(md) {
+    column-count: 3;
+  }
+
+  @include m.respond-to(lg) {
+    column-count: 4;
+  }
+
+  @include m.respond-to(xl) {
+    column-count: 5;
+  }
+}
+
+.sentinel {
+  break-inside: avoid;
+  height: 1px;
+}
