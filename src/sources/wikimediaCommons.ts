@@ -86,7 +86,6 @@ async function resolve(titles: string[], signal: AbortSignal): Promise<Map<strin
 export const wikimediaCommonsSource: MuseumSource = {
   id: 'wikimediaCommons',
   label: 'Wikimedia Commons',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     const results = await searchFiles(query, page, signal)

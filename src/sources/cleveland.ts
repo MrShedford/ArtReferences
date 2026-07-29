@@ -34,7 +34,6 @@ interface ClevelandSearchResponse {
 export const clevelandSource: MuseumSource = {
   id: 'cleveland',
   label: 'Cleveland Museum of Art',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     const params = new URLSearchParams({

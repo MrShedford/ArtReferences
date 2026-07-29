@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { Artwork, SourceId } from '../types/artwork'
-import { allSources } from '../sources'
+import { allSources, isSourceAvailable } from '../sources'
 
 export interface SourceStatus {
   status: 'success' | 'error'
@@ -36,15 +36,24 @@ function interleave(bySource: Artwork[][]): Artwork[] {
 }
 
 /**
- * Fans a query out to every enabled + configured museum source in parallel,
+ * Fans a query out to every enabled + available museum source in parallel,
  * via Promise.allSettled so one slow or broken museum can't block the rest.
  * Backed by React Query's infinite query for caching, retry, and dedup of
  * in-flight requests across re-renders.
+ *
+ * `configuredSourceIds` comes from /api/config — see useConfiguredSources.
  */
-export function useArtworkSearch(query: string, enabledSourceIds: Set<SourceId>) {
+export function useArtworkSearch(
+  query: string,
+  enabledSourceIds: Set<SourceId>,
+  configuredSourceIds: Set<SourceId>,
+) {
   const activeSources = useMemo(
-    () => allSources.filter((s) => s.isConfigured() && enabledSourceIds.has(s.id)),
-    [enabledSourceIds],
+    () =>
+      allSources.filter(
+        (s) => isSourceAvailable(s, configuredSourceIds) && enabledSourceIds.has(s.id),
+      ),
+    [enabledSourceIds, configuredSourceIds],
   )
 
   const infiniteQuery = useInfiniteQuery<ArtworkPage>({

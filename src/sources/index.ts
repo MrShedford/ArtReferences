@@ -1,3 +1,4 @@
+import type { SourceId } from '../types/artwork'
 import type { MuseumSource } from './types'
 import { aicSource } from './aic'
 import { clevelandSource } from './cleveland'
@@ -30,4 +31,10 @@ export const allSources: MuseumSource[] = [
   wikimediaCommonsSource,
 ]
 
-export const configuredSources = () => allSources.filter((s) => s.isConfigured())
+/**
+ * Keyless sources always work. Key-gated ones depend on whether the server
+ * has that key, which the client learns from /api/config — it can't check
+ * itself, since the keys deliberately never reach the browser.
+ */
+export const isSourceAvailable = (source: MuseumSource, configuredIds: Set<SourceId>) =>
+  !source.requiresKey || configuredIds.has(source.id)

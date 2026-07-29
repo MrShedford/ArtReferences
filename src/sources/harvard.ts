@@ -3,13 +3,11 @@ import { fetchJson } from '../lib/fetchJson'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 // Harvard Art Museums requires an API key requested via a manual-approval
-// Google Form (not instant self-serve). Their terms also restrict use to
-// non-commercial purposes and forbid caching results beyond two weeks —
-// noted in the README. isConfigured() gates this source off entirely when
-// no key is present, so the app runs fine without one.
-function getApiKey(): string | undefined {
-  return import.meta.env.VITE_HARVARD_API_KEY as string | undefined
-}
+// Google Form (not instant self-serve). Their terms restrict use to
+// non-commercial purposes, cap it at 2500 requests/day, and forbid caching
+// results beyond two weeks — noted in the README. The key is held server-side
+// and injected by /api/museum, which is what keeps that named, quota-limited
+// key out of the public bundle.
 
 interface HarvardImage {
   baseimageurl?: string
@@ -39,20 +37,16 @@ export const harvardSource: MuseumSource = {
   id: 'harvard',
   label: 'Harvard Art Museums',
   requiresKey: true,
-  isConfigured: () => Boolean(getApiKey()),
 
   async search(query, page, signal) {
-    const apikey = getApiKey()
-    if (!apikey) return []
-
     const params = new URLSearchParams({
-      apikey,
+      source: 'harvard',
       q: query || 'painting',
       size: String(PAGE_SIZE),
       page: String(page + 1), // Harvard pages are 1-indexed
       hasimage: '1',
     })
-    const url = `https://api.harvardartmuseums.org/object?${params}`
+    const url = `/api/museum?${params}`
     const json = await fetchJson<HarvardSearchResponse>('harvard', url, {}, signal)
 
     return json.records

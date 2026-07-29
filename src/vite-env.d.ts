@@ -1,11 +1,5 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  readonly VITE_HARVARD_API_KEY?: string
-  readonly VITE_SMITHSONIAN_API_KEY?: string
-  readonly VITE_EUROPEANA_API_KEY?: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+// The museum API keys are deliberately NOT declared here. They're server-side
+// vars without a VITE_ prefix, read only by api/_shared/sources.ts, so nothing
+// in src/ should ever reach for one via import.meta.env.

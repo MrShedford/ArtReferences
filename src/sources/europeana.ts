@@ -6,9 +6,8 @@ import { PAGE_SIZE, type MuseumSource } from './types'
 // metadata quality. `dcCreator` is frequently a bare VIAF/agent URI rather
 // than a readable name — extractArtist() below is a best-effort heuristic,
 // not a guarantee; many results will legitimately show no artist.
-function getApiKey(): string | undefined {
-  return import.meta.env.VITE_EUROPEANA_API_KEY as string | undefined
-}
+//
+// The key is held server-side and injected by /api/museum.
 
 interface EuropeanaItem {
   title?: string[]
@@ -35,14 +34,10 @@ export const europeanaSource: MuseumSource = {
   id: 'europeana',
   label: 'Europeana',
   requiresKey: true,
-  isConfigured: () => Boolean(getApiKey()),
 
   async search(query, page, signal) {
-    const wskey = getApiKey()
-    if (!wskey) return []
-
     const params = new URLSearchParams({
-      wskey,
+      source: 'europeana',
       query: query || 'painting',
       rows: String(PAGE_SIZE),
       start: String(page * PAGE_SIZE + 1), // Europeana's start is 1-indexed
@@ -50,7 +45,7 @@ export const europeanaSource: MuseumSource = {
       media: 'true',
       profile: 'rich',
     })
-    const url = `https://api.europeana.eu/record/v2/search.json?${params}`
+    const url = `/api/museum?${params}`
     const json = await fetchJson<EuropeanaSearchResponse>('europeana', url, {}, signal)
 
     return json.items

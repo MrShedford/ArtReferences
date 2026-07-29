@@ -164,7 +164,6 @@ async function searchIds(field: 'creator' | 'title', value: string, signal: Abor
 export const rijksmuseumSource: MuseumSource = {
   id: 'rijksmuseum',
   label: 'Rijksmuseum',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     // No free-text search on the new API: map the query to both creator= and

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Artwork, SourceId } from './types/artwork'
 import { allSources } from './sources'
 import { useArtworkSearch } from './hooks/useArtworkSearch'
+import { useConfiguredSources } from './hooks/useConfiguredSources'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { SearchBar } from './components/SearchBar/SearchBar'
 import { SourceFilter } from './components/SourceFilter/SourceFilter'
@@ -18,6 +19,7 @@ function App() {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null)
 
   const debouncedQuery = useDebouncedValue(query, 350)
+  const configuredSourceIds = useConfiguredSources()
 
   const {
     artworks,
@@ -27,7 +29,7 @@ function App() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useArtworkSearch(debouncedQuery, enabledSourceIds)
+  } = useArtworkSearch(debouncedQuery, enabledSourceIds, configuredSourceIds)
 
   const toggleSource = useCallback((id: SourceId) => {
     setEnabledSourceIds((prev) => {
@@ -46,12 +48,18 @@ function App() {
   return (
     <div className={styles.app}>
       <header className={styles.header}>
-        <h1 className={styles.heading}>Museum References</h1>
+        <h1 className={styles.heading}>Art References</h1>
         <p className={styles.subheading}>
-          A wall of open-access artwork from museums around the world.
+          Come and see real artworks from museums and galleries around the world. 
+          Useful for artists, designers, and anyone looking for inspiration from
+          real masters and unambiguously not AI.
         </p>
         <SearchBar value={query} onChange={setQuery} />
-        <SourceFilter enabledSourceIds={enabledSourceIds} onToggle={toggleSource} />
+        <SourceFilter
+          enabledSourceIds={enabledSourceIds}
+          configuredSourceIds={configuredSourceIds}
+          onToggle={toggleSource}
+        />
         <SourceStatusBar activeSources={activeSources} statuses={sourceStatuses} />
       </header>
 

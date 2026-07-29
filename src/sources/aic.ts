@@ -29,7 +29,6 @@ interface AicSearchResponse {
 export const aicSource: MuseumSource = {
   id: 'aic',
   label: 'Art Institute of Chicago',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     const params = new URLSearchParams({

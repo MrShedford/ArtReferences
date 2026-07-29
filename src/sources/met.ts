@@ -27,7 +27,6 @@ const limit = pLimit(6)
 export const metSource: MuseumSource = {
   id: 'met',
   label: 'The Metropolitan Museum of Art',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     // The Met's search endpoint only returns a (potentially huge) list of IDs.

@@ -21,7 +21,6 @@ interface VamSearchResponse {
 export const vamSource: MuseumSource = {
   id: 'vam',
   label: 'Victoria and Albert Museum',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     const params = new URLSearchParams({

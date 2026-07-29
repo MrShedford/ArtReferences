@@ -29,7 +29,6 @@ interface SmkSearchResponse {
 export const smkSource: MuseumSource = {
   id: 'smk',
   label: 'SMK (National Gallery of Denmark)',
-  isConfigured: () => true,
 
   async search(query, page, signal) {
     const params = new URLSearchParams({

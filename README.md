@@ -14,9 +14,9 @@ parallel and results interleave into one masonry wall.
 | [The Met](https://metmuseum.github.io/) | No | Search returns IDs only; each result needs a follow-up detail fetch. |
 | [Rijksmuseum](https://data.rijksmuseum.nl/docs/) | No | Their legacy keyless API was shut down 2026-01-05 (410 Gone). The current replacement is Linked Art / CIDOC-CRM JSON-LD with no free-text search (only `creator`/`title`) and a 3-hop chain to resolve an actual image URL. By far the slowest source — kept to a small page size and capped concurrency. |
 | [Smithsonian Institution](https://api.data.gov/signup/) | **Yes**, free & instant | Sign up at api.data.gov (registers you for their whole platform). |
-| [Harvard Art Museums](https://github.com/harvardartmuseums/api-docs) | **Yes**, manual approval | Requested via a Google Form, not instant. Terms restrict use to non-commercial purposes and forbid caching results beyond two weeks. |
+| [Harvard Art Museums](https://github.com/harvardartmuseums/api-docs) | **Yes**, manual approval | Requested via a Google Form, not instant. Terms restrict use to non-commercial purposes, cap you at 2500 requests/day, and forbid caching results beyond two weeks. |
 | [SMK (National Gallery of Denmark)](https://api.smk.dk/) | No | Full metadata + image in one request, CC0. |
-| [Europeana](https://pro.europeana.eu/page/get-api) | **Yes**, free & instant | A personal key is auto-issued via your Europeana account — no waiting, unlike Harvard. Aggregates ~4000 European institutions, so per-item licensing varies (CC0/PDM/CC-BY/CC-BY-SA) rather than being uniformly CC0 like the rest of this table. Artist names are frequently unavailable — many records only carry a bare VIAF/agent URI, not a readable name. |
+| [Europeana](https://www.europeana.eu/en/for-developers) | **Yes**, free | Not auto-issued on signup: register a Europeana account, then request a key from the API key section of your account. Approval is fast (and a higher-rate "project key" can be requested the same way), but it is a request-and-approve step. Aggregates ~4000 European institutions, so per-item licensing varies (CC0/PDM/CC-BY/CC-BY-SA) rather than being uniformly CC0 like the rest of this table. Artist names are frequently unavailable — many records only carry a bare VIAF/agent URI, not a readable name. |
 | [Wikimedia Commons](https://commons.wikimedia.org/w/api.php) | No | Search only returns file pages, not structured data, so each page batches a follow-up call resolving up to 50 files' image + metadata at once (not a per-item fetch). |
 
 **Not included:**
@@ -42,7 +42,9 @@ parallel and results interleave into one masonry wall.
 
 Adding another museum later is: write a module in `src/sources/` matching
 the `MuseumSource` interface, then add it to the array in
-`src/sources/index.ts`. Nothing else needs to change.
+`src/sources/index.ts`. Nothing else needs to change — unless it needs an
+API key, in which case also add an entry to `api/_shared/sources.ts` and set
+`requiresKey: true`.
 
 ## Setup
 
@@ -61,6 +63,12 @@ immediately. To enable Smithsonian, Harvard, and/or Europeana, copy
 Copy-Item .env.example .env
 ```
 
+Those three keys are **server-side** — no `VITE_` prefix — so they never
+reach the browser. `npm run dev` serves `/api` from a dev-only Vite plugin
+that reuses the same code as the deployed functions, so no Vercel CLI is
+needed locally. Env vars are read when the dev server starts: restart it
+after editing `.env`.
+
 ### Windows PATH note
 
 If `node`/`npm`/`git` aren't resolving in a fresh shell even though they're
@@ -74,33 +82,40 @@ $env:Path = 'C:\nvm4w\nodejs;C:\Program Files\Git\cmd;' + $env:Path
 
 ## Deployment
 
-This is a static, client-only build — there's no server component, every
-museum API is called directly from the browser — so hosting is just
-"build it, serve the output":
+A static Vite build plus two small serverless functions in `api/` — the
+seven keyless museums are still called straight from the browser, and only
+the three key-gated ones go through the proxy.
 
 ```powershell
 npm run build   # produces dist/
 ```
 
-**Vercel** (or Netlify/Cloudflare Pages) auto-detects the Vite preset with
-zero configuration: build command `npm run build`, output directory
-`dist`, no `vercel.json` needed (there's also no client-side router, so no
-SPA rewrite rules to add).
+**Vercel** auto-detects both halves with zero configuration: the Vite preset
+(build `npm run build`, output `dist`) and the `api/` directory as functions.
+No `vercel.json` needed — there's no client-side router either, so no SPA
+rewrite rules to add.
 
 1. Push this repo to GitHub.
 2. In Vercel: **Add New Project** → import the repo. No build settings to change.
-3. Optional — before the first deploy, add whichever of these you have under
-   **Project Settings → Environment Variables**: `VITE_SMITHSONIAN_API_KEY`,
-   `VITE_HARVARD_API_KEY`, `VITE_EUROPEANA_API_KEY` (same keys as `.env.example`).
-   The app runs fine with none set — those sources just stay disabled.
+3. Optional — add whichever of these you have under **Project Settings →
+   Environment Variables**: `SMITHSONIAN_API_KEY`, `HARVARD_API_KEY`,
+   `EUROPEANA_API_KEY` (same names as `.env.example`). Set them for every
+   environment you use, or Preview deploys will show those sources disabled.
+   The app runs fine with none set.
 4. Deploy. Every push to `main` auto-deploys after this.
 
-**Caveat that no config avoids:** any `VITE_*` env var is compiled straight
-into the public JS bundle at build time. Once deployed, whichever API keys
-you set are visible to anyone who opens browser dev tools — this is
-inherent to a client-only app with no backend, not a Vercel-specific gap.
-For these free, rate-limited museum APIs the exposure is low-stakes, but
-it's worth knowing before treating any key here as a secret.
+**Two things worth knowing:**
+
+- Adding or changing an env var does **not** affect an existing deployment —
+  you have to redeploy for it to take effect.
+- Keys stay on the server. `api/museum.ts` injects them into the upstream
+  request, so nothing key-shaped is in the JS bundle; `api/config.ts` tells
+  the client only *which* sources are usable, so the UI can disable the rest.
+  This is why the vars carry no `VITE_` prefix — a `VITE_*` var is compiled
+  straight into the public bundle and would be readable in dev tools, which
+  matters for Harvard's named, non-commercial, 2500/day key in particular.
+  Proxy responses are edge-cached for five minutes to keep repeat searches
+  off that quota.
 
 ## Architecture
 
@@ -109,8 +124,18 @@ it's worth knowing before treating any key here as a secret.
 - `src/sources/` — one adapter module per museum, all satisfying the
   `MuseumSource` interface (`src/sources/types.ts`), plus the registry
   (`index.ts`).
+- `api/` — the only code that touches an API key. `_shared/sources.ts` holds
+  the hard-coded endpoint + key-param + allowed-param table for the three
+  key-gated museums (hard-coded so the proxy can't be used against an
+  arbitrary host), `_shared/handlers.ts` the request handling, and
+  `museum.ts` / `config.ts` are thin Vercel entry points. `vite.config.ts`
+  mounts the same handlers as dev middleware so `npm run dev` behaves the
+  same as production.
+- `src/hooks/useConfiguredSources.ts` — asks `/api/config` which key-gated
+  sources this deployment can serve. The client can't check for itself, since
+  the keys never reach it; a failed request degrades to "none configured".
 - `src/hooks/useArtworkSearch.ts` — fans a query out to every enabled +
-  configured source via `Promise.allSettled` (so one broken museum can't
+  available source via `Promise.allSettled` (so one broken museum can't
   block the rest), interleaves results round-robin, and paginates via
   React Query's `useInfiniteQuery`.
 - `src/components/MasonryWall` — CSS multi-column masonry. Chosen over a
