@@ -11,7 +11,7 @@ import {
   isKeyedSourceId,
   KEYED_SOURCES,
   type Env,
-} from './sources'
+} from './sources.ts'
 
 const UPSTREAM_TIMEOUT_MS = 10_000
 

@@ -1,8 +1,8 @@
 import type { ServerResponse } from 'node:http'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { handleConfigRequest, handleMuseumRequest } from './api/_shared/handlers'
-import type { Env } from './api/_shared/sources'
+import { handleConfigRequest, handleMuseumRequest } from './api/_shared/handlers.ts'
+import type { Env } from './api/_shared/sources.ts'
 
 /**
  * `vite dev` doesn't run the api/ functions, so mount the same handlers as
