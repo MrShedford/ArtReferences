@@ -116,6 +116,11 @@ rewrite rules to add.
   matters for Harvard's named, non-commercial, 2500/day key in particular.
   Proxy responses are edge-cached for five minutes to keep repeat searches
   off that quota.
+- The proxy scrubs the key from every response body before returning it.
+  Europeana echoes yours back on success — as a top-level `apikey` field and
+  inside each item's `link` URL — so forwarding the body verbatim would leak
+  the key the proxy exists to hide. Upstream error bodies are never forwarded
+  at all, for the same reason.
 
 ## Architecture
 
@@ -124,13 +129,15 @@ rewrite rules to add.
 - `src/sources/` — one adapter module per museum, all satisfying the
   `MuseumSource` interface (`src/sources/types.ts`), plus the registry
   (`index.ts`).
-- `api/` — the only code that touches an API key. `_shared/sources.ts` holds
-  the hard-coded endpoint + key-param + allowed-param table for the three
-  key-gated museums (hard-coded so the proxy can't be used against an
-  arbitrary host), `_shared/handlers.ts` the request handling, and
-  `museum.ts` / `config.ts` are thin Vercel entry points. `vite.config.ts`
-  mounts the same handlers as dev middleware so `npm run dev` behaves the
-  same as production.
+- `api/` — the only code that touches an API key. `museum.ts` holds the
+  hard-coded endpoint + key-param + allowed-param table for the three
+  key-gated museums (hard-coded so the proxy can't be pointed at an
+  arbitrary host) and proxies to them; `config.ts` reports which are
+  configured. Both files are deliberately **self-contained with no relative
+  imports** — Vercel runs them under Node ESM, and a sibling import crashed
+  the deployed function while working locally. `vite.config.ts` mounts their
+  real `GET` exports as dev middleware, so `npm run dev` exercises the same
+  entry points production does.
 - `src/hooks/useConfiguredSources.ts` — asks `/api/config` which key-gated
   sources this deployment can serve. The client can't check for itself, since
   the keys never reach it; a failed request degrades to "none configured".
