@@ -58,7 +58,7 @@ function App() {
         <p className={styles.subheading}>
           Come and see real artworks from museums and galleries around the world. 
           Useful for artists, designers, and anyone looking for inspiration from
-          real masters and unambiguously not AI.
+          real artworks.
         </p>
         <SearchBar value={query} onChange={setQuery} />
         <SourceFilter
