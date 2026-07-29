@@ -22,8 +22,6 @@ function App() {
 
   const {
     artworks,
-    sourceStatuses,
-    activeSources,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
