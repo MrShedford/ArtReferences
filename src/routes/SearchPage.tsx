@@ -101,9 +101,9 @@ export function SearchPage() {
       <header className={styles.header}>
         <h1 className={styles.heading}>Art References</h1>
         <p className={styles.subheading}>
-          Come and see real artworks from museums and galleries around the world. Useful for
-          artists, designers, and anyone looking for inspiration from real masters and
-          unambiguously not AI.
+        Come and see real artworks from museums and galleries around the world. 
+          Useful for artists, designers, and anyone looking for inspiration from
+          real artworks.
         </p>
         <SearchBar value={draft} onChange={setDraft} />
         <SourceFilter
