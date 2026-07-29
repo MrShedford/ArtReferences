@@ -52,6 +52,31 @@ export function parseEnabledSources(sources: string | undefined): Set<SourceId> 
   return new Set(sources.split(',') as SourceId[])
 }
 
+const SOURCE_FILTER_STORAGE_KEY = 'museum-references.sources'
+
+export function getSavedSourceSearchParam(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  try {
+    const value = window.localStorage.getItem(SOURCE_FILTER_STORAGE_KEY)
+    return value === null ? undefined : value
+  } catch {
+    return undefined
+  }
+}
+
+export function saveSourceSearchParam(value: string | undefined) {
+  if (typeof window === 'undefined') return
+  try {
+    if (value === undefined) {
+      window.localStorage.removeItem(SOURCE_FILTER_STORAGE_KEY)
+    } else {
+      window.localStorage.setItem(SOURCE_FILTER_STORAGE_KEY, value)
+    }
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
 /** The inverse. Returns undefined when everything is on, so `/` stays clean. */
 export function serializeEnabledSources(enabled: Set<SourceId>): string | undefined {
   if (enabled.size === allSources.length) return undefined

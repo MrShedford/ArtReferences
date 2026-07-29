@@ -1,47 +1,89 @@
 @use '../../styles/variables' as v;
 @use '../../styles/mixins' as m;
 
-.filterRow {
+
+
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
   display: flex;
-  flex-wrap: wrap;
-  gap: v.$space-sm;
-}
-
-.chip {
-  display: inline-flex;
   align-items: center;
-  gap: v.$space-xs;
-  background: v.$color-bg-elevated;
-  border: 1px solid v.$color-border;
-  border-radius: 999px;
-  padding: v.$space-xs v.$space-md;
-  font-size: 0.85rem;
-  color: v.$color-text-muted;
+  gap: 0.5rem;
+
+  padding: 0.65rem 1rem;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background: #fff;
+  color: #111827;
+
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-  @include m.focus-ring;
+  font-size: 0.95rem;
+  font-weight: 500;
 
-  &:hover:not(:disabled) {
-    border-color: v.$color-text-muted;
-    color: v.$color-text;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
   }
 
-  &[data-active='true'] {
-    background: v.$color-accent;
-    border-color: v.$color-accent;
-    color: #1a1305;
-    font-weight: 600;
-  }
-
-  &[data-disabled='true'] {
-    cursor: not-allowed;
-    opacity: 0.5;
+  &:focus-visible {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgb(37 99 235 / 20%);
   }
 }
 
-.keyBadge {
-  font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 0.1rem 0.45rem;
+.arrow {
+  font-size: 0.75rem;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+
+  min-width: 220px;
+
+  padding: 0.5rem;
+
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+
+  box-shadow: 0 10px 25px rgb(0 0 0 / 15%);
+  z-index: 1000;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #111827;
+
+
+  padding: 0.5rem;
+  border-radius: 6px;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  input {
+    cursor: pointer;
+  }
 }

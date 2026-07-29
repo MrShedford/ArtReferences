@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Artwork, SourceId } from '../types/artwork'
-import { parseEnabledSources, searchRoute, serializeEnabledSources } from '../router'
+import { getSavedSourceSearchParam, parseEnabledSources, saveSourceSearchParam, searchRoute, serializeEnabledSources } from '../router'
 import { useArtworkSearch } from '../hooks/useArtworkSearch'
 import { useConfiguredSources } from '../hooks/useConfiguredSources'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { SearchBar } from '../components/SearchBar/SearchBar'
 import { SourceFilter } from '../components/SourceFilter/SourceFilter'
-import { SourceStatusBar } from '../components/SourceStatusBar/SourceStatusBar'
 import { MasonryWall } from '../components/MasonryWall/MasonryWall'
 import { Lightbox } from '../components/Lightbox/Lightbox'
 import styles from './SearchPage.module.scss'
@@ -42,10 +41,24 @@ export function SearchPage() {
   const enabledSourceIds = useMemo(() => parseEnabledSources(sources), [sources])
   const { ids: configuredSourceIds, isPending: isConfigPending } = useConfiguredSources()
 
+  useEffect(() => {
+    if (sources !== undefined) return
+
+    const savedSources = getSavedSourceSearchParam()
+    if (savedSources === undefined) return
+
+    void navigate({
+      search: (prev) => ({ ...prev, sources: savedSources }),
+      replace: true,
+    })
+  }, [navigate, sources])
+
+  useEffect(() => {
+    saveSourceSearchParam(sources)
+  }, [sources])
+
   const {
     artworks,
-    sourceStatuses,
-    activeSources,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
@@ -92,7 +105,6 @@ export function SearchPage() {
           configuredSourceIds={configuredSourceIds}
           onToggle={toggleSource}
         />
-        <SourceStatusBar activeSources={activeSources} statuses={sourceStatuses} />
       </header>
 
       <main>

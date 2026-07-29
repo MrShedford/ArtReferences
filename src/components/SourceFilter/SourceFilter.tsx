@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { SourceId } from '../../types/artwork'
 import { allSources, isSourceAvailable } from '../../sources'
 import styles from './SourceFilter.module.scss'
@@ -14,28 +15,57 @@ export function SourceFilter({
   configuredSourceIds,
   onToggle,
 }: SourceFilterProps) {
+  const [open, setOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const availableSources = allSources.filter((source) =>
+    isSourceAvailable(source, configuredSourceIds)
+  )
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   return (
-    <div className={styles.filterRow} role="group" aria-label="Filter by museum">
-      {allSources.map((source) => {
-        const configured = isSourceAvailable(source, configuredSourceIds)
-        const active = configured && enabledSourceIds.has(source.id)
-        return (
-          <button
-            key={source.id}
-            type="button"
-            className={styles.chip}
-            data-active={active}
-            data-disabled={!configured}
-            disabled={!configured}
-            title={configured ? undefined : 'Needs an API key — see .env.example'}
-            onClick={() => onToggle(source.id)}
-            aria-pressed={active}
-          >
-            {source.label}
-            {!configured && <span className={styles.keyBadge}>key needed</span>}
-          </button>
-        )
-      })}
+    <div className={styles.dropdown} ref={dropdownRef}>
+      <button
+        type="button"
+        className={styles.trigger}
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="true"
+        aria-expanded={open}
+      >
+        Sources ({enabledSourceIds.size}){" "}
+        <span className={styles.arrow}>{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div className={styles.menu} role="menu">
+          {availableSources.map((source) => (
+            <label key={source.id} className={styles.option}>
+              <input
+                type="checkbox"
+                checked={enabledSourceIds.has(source.id)}
+                onChange={() => onToggle(source.id)}
+              />
+              <span>{source.label}</span>
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
