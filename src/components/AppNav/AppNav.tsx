@@ -87,11 +87,17 @@ export function AppNav() {
             </NavItem>
           </li>
         )}
-      </ul>
 
-      <div className={styles.account}>
-        <AccountMenu />
-      </div>
+        {/* In the list rather than beside it: on the tab bar every slot has to
+            get an equal share of the width, and one flex container splitting
+            evenly between however many slots there are does that for both the
+            signed-in three and the signed-out two. Outside the list it was two
+            containers splitting 50/50, which bunched the links into the left
+            half. The rail pins it back to the bottom — see the md block. */}
+        <li className={styles.account}>
+          <AccountMenu />
+        </li>
+      </ul>
     </nav>
   )
 }

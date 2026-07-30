@@ -15,8 +15,6 @@
 
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: v.$space-sm;
 
   // Grown by the inset rather than padded inside it: box-sizing is border-box
   // globally, so padding alone would shrink the tab row instead of lifting it
@@ -33,19 +31,23 @@
 .items {
   display: flex;
   align-items: center;
-  justify-content: space-around;
   gap: v.$space-sm;
 
   flex: 1 1 auto;
   margin: 0;
   padding: 0;
   list-style: none;
-}
 
-.account {
-  display: flex;
-  flex: 1 1 auto;
-  justify-content: center;
+  // Equal shares of a shared row, so the middle destination lands on the middle
+  // of the bar. `1 1 0` rather than space-around: the slots aren't the same
+  // intrinsic width — the avatar carries no caption, "Home" is narrower than
+  // "Lists" — and distributing the leftovers of unequal boxes leaves the icons
+  // visibly off-centre from each other.
+  > li {
+    display: flex;
+    justify-content: center;
+    flex: 1 1 0;
+  }
 }
 
 @include m.respond-to(md) {
@@ -71,13 +73,27 @@
   .items {
     flex-direction: column;
     justify-content: flex-start;
-    flex: 0 0 auto;
+    // Full height so the account slot's auto margin has something to push off.
+    flex: 1 1 auto;
     width: 100%;
+
+    > li {
+      // The rail is one icon wide, so the slots stack at their natural height
+      // instead of splitting the axis — an equal share of 100vh would spread
+      // three icons down the whole viewport.
+      display: block;
+      flex: 0 0 auto;
+    }
   }
 
-  .account {
+  // Child selector to outrank the `.items > li` block just above, which would
+  // otherwise win on specificity and leave this a block.
+  .items > .account {
     // Pins the avatar to the bottom of the rail, away from the destinations.
     margin-top: auto;
-    flex: 0 0 auto;
+    // The trigger is icon-width rather than rail-width, so unlike the links it
+    // needs centring.
+    display: flex;
+    justify-content: center;
   }
 }

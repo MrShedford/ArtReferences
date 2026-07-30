@@ -9,6 +9,13 @@
   position: relative;
 }
 
+// The signed-in caption. Gone on the tab bar — the avatar already says whose
+// account it is — but the same element is the rail's hover tooltip, and there
+// it's worth keeping, naming the account rather than repeating "You".
+.tooltipOnly {
+  display: none;
+}
+
 // Matches the trigger's footprint so the nav doesn't shift when the session
 // resolves — a circle now, not the old avatar-plus-name pill.
 .skeleton {
@@ -75,6 +82,12 @@
 }
 
 @include m.respond-to(md) {
+  .tooltipOnly {
+    // Back in play as the tooltip. nav-item-chrome positions it absolutely and
+    // holds it at opacity 0 until hover, so it costs no layout.
+    display: revert;
+  }
+
   // The trigger is pinned to the bottom of the rail, so the menu flies out to
   // the right instead — upward would run it off the bottom of the viewport.
   .menu {

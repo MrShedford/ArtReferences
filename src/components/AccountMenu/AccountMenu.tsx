@@ -36,8 +36,8 @@ export function AccountMenu() {
         onClick={() => setOpen((wasOpen) => !wasOpen)}
         aria-haspopup="menu"
         aria-expanded={open}
-        // The caption below is decorative — "You" is no use to a screen reader
-        // when the account it belongs to is the thing worth announcing.
+        // The caption below is decorative, and once signed in it isn't rendered
+        // on the tab bar at all — this is what names the control either way.
         aria-label={signedIn ? `Account: ${label}` : 'Sign in'}
       >
         {signedIn ? (
@@ -51,8 +51,14 @@ export function AccountMenu() {
         ) : (
           <SignInIcon />
         )}
-        <span className={styles.navLabel} aria-hidden="true">
-          {signedIn ? 'You' : 'Sign in'}
+        {/* Signed out this is a caption on the tab bar and a tooltip on the
+            rail, same as the nav links. Signed in it's tooltip-only: the avatar
+            is its own caption, and a word under it was just noise. */}
+        <span
+          className={signedIn ? `${styles.navLabel} ${styles.tooltipOnly}` : styles.navLabel}
+          aria-hidden="true"
+        >
+          {signedIn ? label : 'Sign in'}
         </span>
       </button>
 
