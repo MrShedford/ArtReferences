@@ -98,7 +98,9 @@ output `dist`) and the `api/` directory as functions. `vercel.json` carries
 one rewrite, which became necessary when the app gained a client-side router
 — without it a hard refresh on `/lists` hits Vercel's static handler, finds
 no such file, and 404s. The negative lookahead keeps `/api/*` out of the
-rewrite so the functions still resolve.
+rewrite so the functions still resolve, and `/_vercel/*` for the same reason —
+that's where Web Analytics serves its script and collects events, and a
+catch-all that swallowed those would hand back `index.html` instead.
 
 1. Push this repo to GitHub.
 2. In Vercel: **Add New Project** → import the repo. No build settings to change.
@@ -111,7 +113,13 @@ rewrite so the functions still resolve.
      `VITE_GOOGLE_CLIENT_ID`. Without them sign-in and saving disappear and
      the app behaves exactly as it did before accounts existed. See
      "Accounts and saved lists" below.
-4. Deploy. Every push to `main` auto-deploys after this.
+4. Optional: turn on **Web Analytics** (project → **Analytics** → **Enable**).
+   `@vercel/analytics` is already wired up in `src/main.tsx`, but it collects
+   nothing until the project has analytics switched on, and the switch only
+   takes effect on the *next* deployment. Search text is deliberately withheld
+   — a `beforeSend` hook strips the `?q=` param, so searches count as views of
+   `/` and the queries themselves never leave the browser.
+5. Deploy. Every push to `main` auto-deploys after this.
 
 **Three things worth knowing:**
 
