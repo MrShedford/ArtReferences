@@ -1,37 +1,21 @@
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
-import { AccountMenu } from '../components/AccountMenu/AccountMenu'
-import { useSession } from '../hooks/useSession'
+import { AppNav } from '../components/AppNav/AppNav'
 import styles from './RootLayout.module.scss'
 
 /**
- * The one persistent chrome across routes: wordmark, nav, account control.
+ * The app shell: the nav and the column the routes render into. The nav is a
+ * left rail on desktop and a bottom tab bar on mobile — see AppNav.
+ *
  * Everything else — the search box, the museum filters, the status bar —
  * belongs to the search page and unmounts when you leave it.
  */
 export function RootLayout({ children }: { children: ReactNode }) {
-  const { isSignedIn } = useSession()
-
   return (
     <div className={styles.app}>
-      <nav className={styles.nav} aria-label="Main">
-        {/* Deliberately drops the search params: this is "start over", and
-            Back still restores the previous query. */}
-        <Link to="/" className={styles.wordmark} search={{}}>
-          Art References
-        </Link>
-
-        {isSignedIn && (
-          <Link to="/lists" className={styles.navLink} activeProps={{ 'data-active': true }}>
-            My lists
-          </Link>
-        )}
-
-        <div className={styles.spacer} />
-        <AccountMenu />
-      </nav>
-
-      {children}
+      {/* First in the DOM so it leads tab order on desktop, where it's also
+          first visually. On mobile it's fixed to the bottom of the viewport. */}
+      <AppNav />
+      <div className={styles.content}>{children}</div>
     </div>
   )
 }

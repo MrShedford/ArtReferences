@@ -129,6 +129,21 @@ export const listsRoute = createRoute({
 export const router = createRouter({
   routeTree: rootRoute.addChildren([searchRoute, listsRoute]),
   scrollRestoration: true,
+  /**
+   * Key the saved scroll offset by URL rather than by history entry.
+   *
+   * The default is `location.state.__TSR_key`, which is unique per history
+   * entry — so browser Back restored the wall's position, but clicking Home in
+   * the nav pushed a *new* entry, found nothing cached, and fell through to
+   * scrollTo(0). With a nav rail that's the common way back, and landing at the
+   * top of a wall you'd scrolled halfway down loses your place.
+   *
+   * Keying on href means any route to the same URL restores the same offset.
+   * It also stays correct when the URL changes for a reason that *should*
+   * reset: committing a new query makes it /?q=… , a key with nothing saved
+   * against it, so a fresh search still starts at the top.
+   */
+  getScrollRestorationKey: (location) => location.href,
 })
 
 declare module '@tanstack/react-router' {

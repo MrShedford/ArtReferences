@@ -1,0 +1,83 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+// Item + tooltip styling is shared with AccountMenu's trigger, which sits in
+// this same rail — see the nav-item-chrome mixin.
+@include m.nav-item-chrome;
+
+// Base layout is the mobile tab bar: respond-to is min-width only, so the
+// small screen is what's written plainly and the rail is the enhancement.
+.nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: v.$space-sm;
+
+  // Grown by the inset rather than padded inside it: box-sizing is border-box
+  // globally, so padding alone would shrink the tab row instead of lifting it
+  // clear of the iOS home indicator. Matches RootLayout's .content reserve.
+  height: calc(#{v.$nav-bar-height} + env(safe-area-inset-bottom));
+  padding: 0 v.$space-sm env(safe-area-inset-bottom);
+
+  background: v.$color-bg-elevated;
+  border-top: 1px solid v.$color-border;
+
+  z-index: v.$z-nav;
+}
+
+.items {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: v.$space-sm;
+
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+@include m.respond-to(md) {
+  .nav {
+    position: sticky;
+    top: 0;
+    right: auto;
+    bottom: auto;
+
+    flex-direction: column;
+    justify-content: flex-start;
+
+    width: v.$nav-rail-width;
+    // Sticky against the page scroll: the wall scrolls forever, the rail doesn't.
+    height: 100vh;
+    // Explicit reset — the mobile rule's third value was the safe-area inset.
+    padding: v.$space-md v.$space-sm;
+
+    border-top: none;
+    border-right: 1px solid v.$color-border;
+  }
+
+  .items {
+    flex-direction: column;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .account {
+    // Pins the avatar to the bottom of the rail, away from the destinations.
+    margin-top: auto;
+    flex: 0 0 auto;
+  }
+}

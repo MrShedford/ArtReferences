@@ -1,39 +1,25 @@
 @use '../../styles/variables' as v;
 @use '../../styles/mixins' as m;
 
+// Trigger/tooltip styling is shared with AppNav's links, which sit in the same
+// rail — see the nav-item-chrome mixin.
+@include m.nav-item-chrome;
+
 .container {
   position: relative;
 }
 
-// Matches the signed-in trigger's footprint so the nav doesn't shift when the
-// session resolves.
+// Matches the trigger's footprint so the nav doesn't shift when the session
+// resolves — a circle now, not the old avatar-plus-name pill.
 .skeleton {
-  min-height: 2.25rem;
-  min-width: 8rem;
-}
-
-.trigger {
-  display: flex;
-  align-items: center;
-  gap: v.$space-sm;
-  padding: v.$space-xs v.$space-sm;
-  background: none;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  color: v.$color-text;
-  cursor: pointer;
-  font-size: 0.85rem;
-  @include m.focus-ring;
-
-  &:hover {
-    border-color: v.$color-border;
-  }
+  width: 3rem;
+  height: 3rem;
 }
 
 .avatar,
 .avatarFallback {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -44,23 +30,20 @@
   background: v.$color-bg-elevated;
   color: v.$color-accent;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
-.label {
-  max-width: 10rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+// Opens upward, above the tab bar it's anchored to. Right-aligned to the
+// trigger so a wider menu grows inward rather than off the screen edge.
 .menu {
   position: absolute;
-  top: calc(100% + #{v.$space-xs});
   right: 0;
-  // Below the Lightbox backdrop's 100, above the wall.
-  z-index: 20;
+  bottom: calc(100% + #{v.$space-xs});
+
+  // Below the Lightbox backdrop's 100, above the nav it sits on top of.
+  z-index: v.$z-nav + 1;
   min-width: 10rem;
+
   display: flex;
   flex-direction: column;
   background: v.$color-bg-elevated;
@@ -88,5 +71,15 @@
   &:disabled {
     color: v.$color-text-muted;
     cursor: default;
+  }
+}
+
+@include m.respond-to(md) {
+  // The trigger is pinned to the bottom of the rail, so the menu flies out to
+  // the right instead — upward would run it off the bottom of the viewport.
+  .menu {
+    right: auto;
+    bottom: 0;
+    left: calc(100% + #{v.$space-xs});
   }
 }

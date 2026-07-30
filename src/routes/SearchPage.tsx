@@ -5,6 +5,7 @@ import { getSavedSourceSearchParam, parseEnabledSources, saveSourceSearchParam, 
 import { useArtworkSearch } from '../hooks/useArtworkSearch'
 import { useConfiguredSources } from '../hooks/useConfiguredSources'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { setLastBrowseSearch } from '../hooks/useLastBrowseSearch'
 import { SearchBar } from '../components/SearchBar/SearchBar'
 import { SourceFilter } from '../components/SourceFilter/SourceFilter'
 import { TypeFilter } from '../components/TypeFilter/TypeFilter'
@@ -41,6 +42,13 @@ export function SearchPage() {
   useEffect(() => {
     setDraft(q)
   }, [q])
+
+  // Leave a breadcrumb for the nav's Home icon: /lists can't carry these, and
+  // without them Home would land on a bare `/` — a different wall, and a
+  // different scroll-restoration key, so you'd lose your place either way.
+  useEffect(() => {
+    setLastBrowseSearch({ q: q || undefined, sources, type })
+  }, [q, sources, type])
 
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null)
 
@@ -115,12 +123,9 @@ export function SearchPage() {
   return (
     <>
       <header className={styles.header}>
-        <h1 className={styles.heading}>Art References</h1>
-        <p className={styles.subheading}>
-        Come and see real artworks from museums and galleries around the world. 
-          Useful for artists, designers, and anyone looking for inspiration from
-          real artworks.
-        </p>
+        {/* Hidden rather than deleted: the nav is icons now, so this is the
+            only thing naming the page for a screen reader. */}
+        <h1 className={styles.srOnly}>Art References</h1>
         <SearchBar value={draft} onChange={setDraft} />
         <div className={styles.filters}>
           <SourceFilter

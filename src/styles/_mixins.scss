@@ -20,6 +20,125 @@
 }
 
 /**
+ * Off-screen for sighted users, still read by screen readers. Not `display:
+ * none` and not `visibility: hidden` — both of those take the element out of
+ * the accessibility tree, which is the opposite of the point.
+ */
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/**
+ * Shared chrome for the app nav's tappable slots — AppNav's Home/Lists links
+ * and AccountMenu's avatar trigger. They sit in the same rail with nothing
+ * between them, so any drift is immediately visible; same reasoning as
+ * dropdown-chrome below.
+ *
+ * Emits .navItem / .navLabel. The label is a plain caption under the icon on
+ * the mobile tab bar and a hover/focus tooltip beside the desktop rail — one
+ * element, because a touch device never fires hover and a caption there is
+ * more useful than a tooltip that can't be triggered.
+ */
+@mixin nav-item-chrome {
+  .navItem {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+
+    // Comfortably past the 44px touch target minimum on the tab bar.
+    min-width: 3rem;
+    min-height: 3rem;
+    padding: 0;
+
+    background: none;
+    border: none;
+    border-radius: v.$radius-md;
+
+    color: v.$color-text-muted;
+    text-decoration: none;
+    cursor: pointer;
+
+    transition:
+      color 0.15s ease,
+      background 0.15s ease;
+
+    &:hover {
+      color: v.$color-text;
+      background: rgb(255 255 255 / 6%);
+    }
+
+    // TanStack Router stamps this on the link matching the current route.
+    &[data-active='true'] {
+      color: v.$color-accent;
+    }
+
+    @include focus-ring;
+
+    svg {
+      width: 1.35rem;
+      height: 1.35rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .navLabel {
+    font-size: 0.65rem;
+    line-height: 1;
+    letter-spacing: 0.01em;
+  }
+
+  @include respond-to(md) {
+    .navItem {
+      // The rail is only as wide as the icon, so the label stops being part of
+      // the layout and becomes a tooltip flying out to the right.
+      gap: 0;
+    }
+
+    .navLabel {
+      position: absolute;
+      top: 50%;
+      left: calc(100% + #{v.$space-xs});
+      transform: translateY(-50%);
+
+      padding: v.$space-xs v.$space-sm;
+
+      background: v.$color-bg-elevated;
+      border: 1px solid v.$color-border;
+      border-radius: v.$radius-sm;
+      box-shadow: 0 8px 24px rgb(0 0 0 / 50%);
+
+      color: v.$color-text;
+      font-size: 0.8rem;
+      white-space: nowrap;
+
+      opacity: 0;
+      // Never let the tooltip eat the pointer — it overhangs the content column.
+      pointer-events: none;
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: opacity 0.15s ease;
+      }
+    }
+
+    .navItem:hover .navLabel,
+    .navItem:focus-visible .navLabel {
+      opacity: 1;
+    }
+  }
+}
+
+/**
  * Shared chrome for the header's filter dropdowns (sources, art type). They
  * sit next to each other, so any drift between them is immediately visible —
  * hence one mixin rather than two near-identical modules.

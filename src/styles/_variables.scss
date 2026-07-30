@@ -22,3 +22,13 @@ $space-sm: 0.5rem;
 $space-md: 1rem;
 $space-lg: 1.5rem;
 $space-xl: 2.5rem;
+
+// App shell chrome. AppNav is one component with two layouts — a vertical icon
+// rail from $bp-md up, a fixed bottom tab bar below it — and the content column
+// has to reserve room for whichever is showing, so both live here.
+$nav-rail-width: 4rem;
+$nav-bar-height: 3.5rem;
+
+// Above the wall (ArtworkCard 10, AccountMenu's menu 20) and below the Lightbox
+// backdrop's 100, so a fullscreen artwork still covers the bottom bar.
+$z-nav: 50;

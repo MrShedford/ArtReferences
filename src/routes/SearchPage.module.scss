@@ -1,11 +1,16 @@
 @use '../styles/variables' as v;
+@use '../styles/mixins' as m;
 
 .header {
   display: flex;
   flex-direction: column;
   gap: v.$space-md;
-  padding: v.$space-lg v.$space-md;
+  padding: v.$space-md;
   border-bottom: 1px solid v.$color-border;
+}
+
+.srOnly {
+  @include m.visually-hidden;
 }
 
 // The header stacks its children, so the two filter dropdowns need their own
@@ -15,17 +20,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: v.$space-sm;
-}
-
-.heading {
-  margin: 0;
-  font-size: 1.6rem;
-}
-
-.subheading {
-  margin: -#{v.$space-sm} 0 0;
-  color: v.$color-text-muted;
-  font-size: 0.95rem;
 }
 
 .loading {

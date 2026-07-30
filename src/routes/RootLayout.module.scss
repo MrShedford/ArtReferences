@@ -2,44 +2,27 @@
 @use '../styles/mixins' as m;
 
 .app {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
-.nav {
-  display: flex;
-  align-items: center;
-  gap: v.$space-md;
-  padding: v.$space-sm v.$space-md;
-  border-bottom: 1px solid v.$color-border;
-}
-
-.wordmark {
-  font-weight: 600;
-  font-size: 1rem;
-  text-decoration: none;
-  color: v.$color-text;
-  border-radius: v.$radius-sm;
-  @include m.focus-ring;
-}
-
-.navLink {
-  font-size: 0.9rem;
-  text-decoration: none;
-  color: v.$color-text-muted;
-  padding: v.$space-xs v.$space-sm;
-  border-radius: v.$radius-sm;
-  @include m.focus-ring;
-
-  &:hover {
-    color: v.$color-text;
-  }
-
-  // TanStack Router stamps this on the link matching the current route.
-  &[data-active='true'] {
-    color: v.$color-accent;
-  }
-}
-
-.spacer {
+.content {
   flex: 1 1 auto;
+  // Without this the masonry's intrinsic width stops the column from shrinking
+  // once .app becomes a row, and the page scrolls sideways.
+  min-width: 0;
+  // Clears the fixed tab bar, so the last row of artwork isn't stranded under it.
+  padding-bottom: calc(#{v.$nav-bar-height} + env(safe-area-inset-bottom));
+}
+
+@include m.respond-to(md) {
+  .app {
+    flex-direction: row;
+  }
+
+  .content {
+    // The rail is in flow at this width, so nothing overlaps the content.
+    padding-bottom: 0;
+  }
 }
