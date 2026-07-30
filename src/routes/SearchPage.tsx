@@ -1,18 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Artwork, SourceId } from '../types/artwork'
+import type { ArtTypeId } from '../lib/artTypes'
 import { getSavedSourceSearchParam, parseEnabledSources, saveSourceSearchParam, searchRoute, serializeEnabledSources } from '../router'
 import { useArtworkSearch } from '../hooks/useArtworkSearch'
 import { useConfiguredSources } from '../hooks/useConfiguredSources'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { SearchBar } from '../components/SearchBar/SearchBar'
 import { SourceFilter } from '../components/SourceFilter/SourceFilter'
+import { TypeFilter } from '../components/TypeFilter/TypeFilter'
 import { MasonryWall } from '../components/MasonryWall/MasonryWall'
 import { Lightbox } from '../components/Lightbox/Lightbox'
 import styles from './SearchPage.module.scss'
 
 export function SearchPage() {
-  const { q = '', sources } = searchRoute.useSearch()
+  const { q = '', sources, type } = searchRoute.useSearch()
   const navigate = searchRoute.useNavigate()
+
+  // One open-menu slot shared by both header dropdowns: they sit side by side,
+  // so two independently-open menus would overlap each other.
+  const [openFilter, setOpenFilter] = useState<'sources' | 'type' | null>(null)
 
   // The input is local; the URL is the committed query. Typing updates the
   // draft immediately and the URL only after the debounce settles, so the
@@ -69,7 +75,7 @@ export function SearchPage() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useArtworkSearch(q, enabledSourceIds, configuredSourceIds, isConfigPending)
+  } = useArtworkSearch(q, enabledSourceIds, configuredSourceIds, isConfigPending, type)
 
   const toggleSource = useCallback(
     (id: SourceId) => {
@@ -82,6 +88,16 @@ export function SearchPage() {
       })
     },
     [enabledSourceIds, navigate],
+  )
+
+  const handleTypeChange = useCallback(
+    (next: ArtTypeId | undefined) => {
+      void navigate({
+        search: (prev) => ({ ...prev, type: next }),
+        replace: true,
+      })
+    },
+    [navigate],
   )
 
   const canLoadMore = useMemo(
@@ -106,11 +122,21 @@ export function SearchPage() {
           real artworks.
         </p>
         <SearchBar value={draft} onChange={setDraft} />
-        <SourceFilter
-          enabledSourceIds={enabledSourceIds}
-          configuredSourceIds={configuredSourceIds}
-          onToggle={toggleSource}
-        />
+        <div className={styles.filters}>
+          <SourceFilter
+            enabledSourceIds={enabledSourceIds}
+            configuredSourceIds={configuredSourceIds}
+            onToggle={toggleSource}
+            open={openFilter === 'sources'}
+            onOpenChange={(next) => setOpenFilter(next ? 'sources' : null)}
+          />
+          <TypeFilter
+            value={type}
+            onChange={handleTypeChange}
+            open={openFilter === 'type'}
+            onOpenChange={(next) => setOpenFilter(next ? 'type' : null)}
+          />
+        </div>
       </header>
 
       <main>
@@ -122,7 +148,9 @@ export function SearchPage() {
         )}
         {!isLoading && artworks.length === 0 && (
           <p className={styles.loading}>
-            No results. Try a different search or enable more museums.
+            {type
+              ? 'No results. Try a different search, another art type, or enable more museums.'
+              : 'No results. Try a different search or enable more museums.'}
           </p>
         )}
         <MasonryWall

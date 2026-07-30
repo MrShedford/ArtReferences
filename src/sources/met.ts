@@ -1,6 +1,7 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
 import { pLimit } from '../lib/pLimit'
+import { getTypeFilter } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 interface MetSearchResponse {
@@ -28,7 +29,7 @@ export const metSource: MuseumSource = {
   id: 'met',
   label: 'The Metropolitan Museum of Art',
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
     // The Met's search endpoint only returns a (potentially huge) list of IDs.
     // Free-text browsing with an empty query works too, since q= still requires
     // a term server-side, so fall back to a broad one.
@@ -36,6 +37,8 @@ export const metSource: MuseumSource = {
       q: query || 'art',
       hasImages: 'true',
     })
+    const medium = type && getTypeFilter('met', type)
+    if (medium) params.set('medium', medium)
     const url = `https://collectionapi.metmuseum.org/public/collection/v1/search?${params}`
     const searchJson = await fetchJson<MetSearchResponse>('met', url, {}, signal)
     const ids = searchJson.objectIDs ?? []

@@ -1,6 +1,7 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
 import { pLimit } from '../lib/pLimit'
+import { getTypeFilter, getTypeKeyword } from '../lib/artTypes'
 import type { MuseumSource } from './types'
 
 // Rijksmuseum's legacy keyless collection API was shut down 2026-01-05
@@ -153,9 +154,17 @@ async function resolveArtwork(objectId: string, signal: AbortSignal): Promise<Ar
   }
 }
 
-async function searchIds(field: 'creator' | 'title', value: string, signal: AbortSignal) {
+async function searchIds(
+  field: 'creator' | 'title' | null,
+  value: string,
+  signal: AbortSignal,
+  type?: string | null,
+) {
   const params = new URLSearchParams({ imageAvailable: 'true' })
-  params.set(field, value)
+  if (field) params.set(field, value)
+  // Composes with creator=/title= rather than replacing them, and is usable on
+  // its own — creator=rembrandt&type=schilderij narrows 100 results to 24.
+  if (type) params.set('type', type)
   const url = `https://data.rijksmuseum.nl/search/collection?${params}`
   const json = await fetchJson<OrderedCollectionPage>('rijksmuseum', url, {}, signal)
   return json.orderedItems ?? []
@@ -165,15 +174,31 @@ export const rijksmuseumSource: MuseumSource = {
   id: 'rijksmuseum',
   label: 'Rijksmuseum',
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
+    // Dutch, and null for the types Rijksmuseum has no umbrella term for —
+    // those fall back to a Dutch keyword in the title= search instead.
+    const typeValue = type ? getTypeFilter('rijksmuseum', type) : null
+
     // No free-text search on the new API: map the query to both creator= and
-    // title= in parallel and dedupe. An empty query browses paintings broadly.
-    const [byCreator, byTitle] = query
-      ? await Promise.all([
-          searchIds('creator', query, signal).catch(() => []),
-          searchIds('title', query, signal).catch(() => []),
-        ])
-      : [await searchIds('title', 'landschap', signal).catch(() => []), []]
+    // title= in parallel and dedupe.
+    let byCreator: { id: string; type: string }[] = []
+    let byTitle: { id: string; type: string }[] = []
+
+    if (query) {
+      ;[byCreator, byTitle] = await Promise.all([
+        searchIds('creator', query, signal, typeValue).catch(() => []),
+        searchIds('title', query, signal, typeValue).catch(() => []),
+      ])
+    } else if (typeValue) {
+      // Browsing a type needs no title constraint at all — type= alone is a
+      // far better browse than the old hardcoded title=landschap.
+      byTitle = await searchIds(null, '', signal, typeValue).catch(() => [])
+    } else {
+      // An empty query with no usable type filter: browse by title, using the
+      // type's Dutch keyword when there is one and 'landschap' otherwise.
+      const term = type ? getTypeKeyword('rijksmuseum', type) : 'landschap'
+      byTitle = await searchIds('title', term, signal).catch(() => [])
+    }
 
     const seen = new Set<string>()
     const ids = [...byCreator, ...byTitle]

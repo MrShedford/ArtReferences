@@ -8,6 +8,15 @@
   border-bottom: 1px solid v.$color-border;
 }
 
+// The header stacks its children, so the two filter dropdowns need their own
+// row to sit side by side. Wraps rather than squashes on narrow screens.
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: v.$space-sm;
+}
+
 .heading {
   margin: 0;
   font-size: 1.6rem;

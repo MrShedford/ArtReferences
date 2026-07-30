@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter, withTypeKeyword } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 // Europeana aggregates ~4000 European institutions with wildly inconsistent
@@ -35,16 +36,23 @@ export const europeanaSource: MuseumSource = {
   label: 'Europeana',
   requiresKey: true,
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
+    // dcType coverage is as uneven as everything else here: most types have a
+    // usable value, but ceramics and metalwork return nothing at all, so those
+    // fall back to the keyword. `qf` has to be allowlisted in api/museum.ts.
+    const dcType = type ? getTypeFilter('europeana', type) : null
+    const effectiveQuery = dcType ? query : withTypeKeyword('europeana', query, type)
+
     const params = new URLSearchParams({
       source: 'europeana',
-      query: query || 'painting',
+      query: effectiveQuery || 'painting',
       rows: String(PAGE_SIZE),
       start: String(page * PAGE_SIZE + 1), // Europeana's start is 1-indexed
       reusability: 'open',
       media: 'true',
       profile: 'rich',
     })
+    if (dcType) params.set('qf', `proxy_dc_type:${dcType}`)
     const url = `/api/museum?${params}`
     const json = await fetchJson<EuropeanaSearchResponse>('europeana', url, {}, signal)
 

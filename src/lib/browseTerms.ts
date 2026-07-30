@@ -51,6 +51,31 @@ const POOLS_BY_SOURCE: Partial<Record<SourceId, string[]>> = {
 }
 
 /**
+ * Subjects only — no medium words. When an art-type filter is active the
+ * browse term must not name a competing medium: drawing a term of 'sculpture'
+ * while the filter asks for paintings searches for paintings *of* sculptures,
+ * and the wall comes back nearly empty. What a piece depicts is orthogonal to
+ * what it is, so these stay free to vary.
+ */
+const DEFAULT_SUBJECT_POOL = [
+  'portrait',
+  'landscape',
+  'seascape',
+  'flowers',
+  'garden',
+  'river',
+  'mountain',
+  'horse',
+  'harbour',
+  'figure',
+]
+
+const SUBJECT_POOLS_BY_SOURCE: Partial<Record<SourceId, string[]>> = {
+  rijksmuseum: ['landschap', 'portret', 'gezicht', 'bloemen', 'schip', 'molen'],
+  smk: ['portræt', 'landskab', 'blomster'],
+}
+
+/**
  * Stable for a given source+seed pair, so every page fetched during one visit
  * keeps browsing the same term — otherwise page 2 would be a different subject
  * than page 1 and the wall would read as noise.
@@ -58,4 +83,14 @@ const POOLS_BY_SOURCE: Partial<Record<SourceId, string[]>> = {
 export function getBrowseTerm(sourceId: SourceId, seed: number): string {
   const pool = POOLS_BY_SOURCE[sourceId] ?? DEFAULT_POOL
   return pool[seededIndex(`term:${sourceId}`, seed, pool.length)]
+}
+
+/**
+ * The browse term to use when an art-type filter is active. Same stability
+ * guarantee as getBrowseTerm, drawn from the subject-only pools so the term
+ * refines the filter instead of contradicting it.
+ */
+export function getBrowseSubject(sourceId: SourceId, seed: number): string {
+  const pool = SUBJECT_POOLS_BY_SOURCE[sourceId] ?? DEFAULT_SUBJECT_POOL
+  return pool[seededIndex(`subject:${sourceId}`, seed, pool.length)]
 }

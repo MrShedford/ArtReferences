@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter, withTypeKeyword } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 interface SmkTitle {
@@ -30,12 +31,22 @@ export const smkSource: MuseumSource = {
   id: 'smk',
   label: 'SMK (National Gallery of Denmark)',
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
+    // SMK is a fine-art gallery: object_names has real values for paintings,
+    // sculpture, drawings and prints, but the decorative types return single
+    // digits — worse than a keyword search over the same collection. Both
+    // paths stay in Danish; an English word matches nothing here.
+    const objectName = type ? getTypeFilter('smk', type) : null
+    const effectiveQuery = objectName ? query : withTypeKeyword('smk', query, type)
+
+    const filters = ['[has_image:true]']
+    if (objectName) filters.push(`[object_names:${objectName}]`)
+
     const params = new URLSearchParams({
-      keys: query || 'maleri', // Danish for "painting" — no neutral browse query exists
+      keys: effectiveQuery || 'maleri', // Danish for "painting" — no neutral browse query exists
       rows: String(PAGE_SIZE),
       offset: String(page * PAGE_SIZE),
-      filters: '[has_image:true]',
+      filters: filters.join(','),
     })
     const url = `https://api.smk.dk/api/v1/art/search/?${params}`
     const json = await fetchJson<SmkSearchResponse>('smk', url, {}, signal)

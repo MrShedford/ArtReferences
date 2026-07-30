@@ -18,3 +18,92 @@
     outline-offset: 2px;
   }
 }
+
+/**
+ * Shared chrome for the header's filter dropdowns (sources, art type). They
+ * sit next to each other, so any drift between them is immediately visible —
+ * hence one mixin rather than two near-identical modules.
+ *
+ * Emits .dropdown / .trigger / .arrow / .menu / .option, which is the class
+ * set both components use.
+ */
+@mixin dropdown-chrome {
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .trigger {
+    display: flex;
+    align-items: center;
+    gap: v.$space-sm;
+
+    padding: 0.65rem 1rem;
+
+    border: 1px solid v.$color-border;
+    border-radius: 8px;
+
+    background: v.$color-bg-elevated;
+    color: v.$color-text;
+
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover {
+      border-color: v.$color-text-muted;
+    }
+
+    @include focus-ring;
+  }
+
+  .arrow {
+    font-size: 0.75rem;
+    color: v.$color-text-muted;
+  }
+
+  .menu {
+    position: absolute;
+    top: calc(100% + #{v.$space-sm});
+    left: 0;
+
+    min-width: 220px;
+
+    padding: v.$space-sm;
+
+    background: v.$color-bg-elevated;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-md;
+
+    box-shadow: 0 10px 25px rgb(0 0 0 / 45%);
+    z-index: 1000;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: v.$color-text;
+
+    padding: v.$space-sm;
+    border-radius: v.$radius-sm;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgb(255 255 255 / 6%);
+    }
+
+    input {
+      cursor: pointer;
+      accent-color: v.$color-accent;
+    }
+  }
+}

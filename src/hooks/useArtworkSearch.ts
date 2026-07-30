@@ -3,8 +3,9 @@ import { useMemo } from 'react'
 import type { Artwork, SourceId } from '../types/artwork'
 import type { MuseumSource } from '../sources'
 import { allSources, isSourceAvailable } from '../sources'
+import type { ArtTypeId } from '../lib/artTypes'
 import { SESSION_SEED, createSeededRng, seededIndex, shuffleWithRng } from '../lib/random'
-import { getBrowseTerm } from '../lib/browseTerms'
+import { getBrowseSubject, getBrowseTerm } from '../lib/browseTerms'
 
 export interface SourceStatus {
   status: 'success' | 'error'
@@ -60,11 +61,12 @@ async function fetchSourcePage(
   page: number,
   offset: number,
   signal: AbortSignal,
+  type: ArtTypeId | undefined,
 ): Promise<Artwork[]> {
-  if (offset === 0) return source.search(query, page, signal)
-  const offsetResults = await source.search(query, page + offset, signal)
+  if (offset === 0) return source.search(query, page, signal, type)
+  const offsetResults = await source.search(query, page + offset, signal, type)
   if (offsetResults.length > 0) return offsetResults
-  return source.search(query, page, signal)
+  return source.search(query, page, signal, type)
 }
 
 /**
@@ -80,6 +82,7 @@ export function useArtworkSearch(
   enabledSourceIds: Set<SourceId>,
   configuredSourceIds: Set<SourceId>,
   isConfigPending = false,
+  type?: ArtTypeId,
 ) {
   const activeSources = useMemo(
     () =>
@@ -111,7 +114,15 @@ export function useArtworkSearch(
   const infiniteQuery = useInfiniteQuery<ArtworkPage>({
     // browseSeed belongs in the key: without it React Query would serve the
     // previous visit's cached pages and none of the above would be observable.
-    queryKey: ['artworks', query, activeSources.map((s) => s.id).sort().join(','), browseSeed],
+    // type belongs in the key for the same reason browseSeed does: without it
+    // switching type would serve the previous type's cached pages.
+    queryKey: [
+      'artworks',
+      query,
+      activeSources.map((s) => s.id).sort().join(','),
+      browseSeed,
+      type ?? '',
+    ],
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       const page = pageParam as number
@@ -119,10 +130,18 @@ export function useArtworkSearch(
         orderedSources.map((source) =>
           fetchSourcePage(
             source,
-            isBrowse ? getBrowseTerm(source.id, browseSeed) : query,
+            // With a type filter on, browse draws from the subject-only pool:
+            // the default pool contains medium words like 'sculpture', which
+            // would fight the filter and empty the wall.
+            isBrowse
+              ? type
+                ? getBrowseSubject(source.id, browseSeed)
+                : getBrowseTerm(source.id, browseSeed)
+              : query,
             page,
             isBrowse ? seededIndex(`page:${source.id}`, browseSeed, MAX_BROWSE_PAGE_OFFSET) : 0,
             signal,
+            type,
           ),
         ),
       )

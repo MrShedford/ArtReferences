@@ -33,13 +33,17 @@ const SOURCES: Record<KeyedSourceId, KeyedSourceConfig> = {
     endpoint: 'https://api.harvardartmuseums.org/object',
     keyParam: 'apikey',
     envVar: 'HARVARD_API_KEY',
-    allowedParams: ['q', 'size', 'page', 'hasimage'],
+    // `classification` carries the art-type filter — see src/lib/artTypes.ts.
+    allowedParams: ['q', 'size', 'page', 'hasimage', 'classification'],
   },
   europeana: {
     endpoint: 'https://api.europeana.eu/record/v2/search.json',
     keyParam: 'wskey',
     envVar: 'EUROPEANA_API_KEY',
-    allowedParams: ['query', 'rows', 'start', 'reusability', 'media', 'profile'],
+    // `qf` carries the art-type filter as proxy_dc_type:<value>. It's a facet
+    // expression rather than a bare value, but it still only reaches Europeana
+    // — the endpoint stays hard-coded, so this can't redirect the request.
+    allowedParams: ['query', 'rows', 'start', 'reusability', 'media', 'profile', 'qf'],
   },
 }
 

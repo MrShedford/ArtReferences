@@ -19,7 +19,9 @@ const queryClient = new QueryClient({
 /**
  * SearchPage commits the typed query to the URL, so the raw text someone typed
  * would otherwise reach Vercel — and give every distinct search its own row in
- * the Pages panel. `sources` stays: it's a bounded set of museum ids.
+ * the Pages panel. `sources` and `type` stay: both are bounded, non-sensitive
+ * enumerations (museum ids, art types), and which types people filter by is
+ * exactly the kind of thing worth seeing in the Pages panel.
  */
 function stripSearchQuery(event: BeforeSendEvent): BeforeSendEvent {
   const url = new URL(event.url)

@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 const FIELDS = 'id,title,artist_title,date_display,image_id,thumbnail,department_title'
@@ -30,13 +31,17 @@ export const aicSource: MuseumSource = {
   id: 'aic',
   label: 'Art Institute of Chicago',
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
     const params = new URLSearchParams({
       q: query || 'painting',
       limit: String(PAGE_SIZE),
       page: String(page + 1), // AIC pages are 1-indexed
       fields: FIELDS,
     })
+    // `match`, not `term`: classification_title is analyzed, so a term query
+    // for "painting" matches nothing at all.
+    const classification = type && getTypeFilter('aic', type)
+    if (classification) params.set('query[match][classification_title]', classification)
     const url = `https://api.artic.edu/api/v1/artworks/search?${params}`
     const json = await fetchJson<AicSearchResponse>('aic', url, {}, signal)
     const iiifBase = json.config.iiif_url

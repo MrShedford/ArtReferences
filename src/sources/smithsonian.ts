@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 // Smithsonian Open Access uses a free, instant api.data.gov key (unlike
@@ -55,15 +56,22 @@ export const smithsonianSource: MuseumSource = {
   label: 'Smithsonian Institution',
   requiresKey: true,
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
     // Verified live (with api.data.gov's DEMO_KEY): even with the
     // online_media_type:Images filter, most matching rows still lack actual
     // media (many Smithsonian records are library/archival text, not
     // objects). Over-fetch and filter client-side, then trim to PAGE_SIZE.
     const requestRows = PAGE_SIZE * 3
+
+    // object_type is another clause in the same Lucene expression, so this
+    // needs no new proxy param — unlike Harvard and Europeana.
+    const objectType = type && getTypeFilter('smithsonian', type)
+    const clauses = [query || 'painting', 'online_media_type:Images']
+    if (objectType) clauses.push(`object_type:${objectType}`)
+
     const params = new URLSearchParams({
       source: 'smithsonian',
-      q: `${query || 'painting'} AND online_media_type:Images`,
+      q: clauses.join(' AND '),
       rows: String(requestRows),
       start: String(page * requestRows),
     })

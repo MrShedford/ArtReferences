@@ -1,0 +1,4 @@
+@use '../../styles/mixins' as m;
+
+// Shared with SourceFilter, which sits directly beside this one in the header.
+@include m.dropdown-chrome;

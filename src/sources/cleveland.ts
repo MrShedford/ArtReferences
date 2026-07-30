@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 interface ClevelandImageVariant {
@@ -35,13 +36,15 @@ export const clevelandSource: MuseumSource = {
   id: 'cleveland',
   label: 'Cleveland Museum of Art',
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
     const params = new URLSearchParams({
       q: query || 'painting',
       limit: String(PAGE_SIZE),
       skip: String(page * PAGE_SIZE),
       has_image: '1',
     })
+    const classification = type && getTypeFilter('cleveland', type)
+    if (classification) params.set('type', classification)
     const url = `https://openaccess-api.clevelandart.org/api/artworks/?${params}`
     const json = await fetchJson<ClevelandSearchResponse>('cleveland', url, {}, signal)
 

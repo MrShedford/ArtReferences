@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter, withTypeKeyword } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 interface VamRecord {
@@ -22,13 +23,20 @@ export const vamSource: MuseumSource = {
   id: 'vam',
   label: 'Victoria and Albert Museum',
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
+    // V&A records a specific object type ("Vase", "Chair"), not a family, so
+    // the fine-art types filter natively and the decorative ones fall back to
+    // folding the word into q — there is no "Ceramics" to ask for.
+    const objectType = type ? getTypeFilter('vam', type) : null
+    const effectiveQuery = objectType ? query : withTypeKeyword('vam', query, type)
+
     const params = new URLSearchParams({
-      q: query || 'painting',
+      q: effectiveQuery || 'painting',
       page: String(page + 1), // V&A pages are 1-indexed
       page_size: String(PAGE_SIZE),
       images_exist: '1',
     })
+    if (objectType) params.set('kw_object_type', objectType)
     const url = `https://api.vam.ac.uk/v2/objects/search?${params}`
     const json = await fetchJson<VamSearchResponse>('vam', url, {}, signal)
 

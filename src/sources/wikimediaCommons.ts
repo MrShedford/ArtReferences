@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { withTypeKeyword } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 // Commons' search API returns wiki pages, not structured artwork data, so a
@@ -87,8 +88,12 @@ export const wikimediaCommonsSource: MuseumSource = {
   id: 'wikimediaCommons',
   label: 'Wikimedia Commons',
 
-  async search(query, page, signal) {
-    const results = await searchFiles(query, page, signal)
+  async search(query, page, signal, type) {
+    // Commons has no classification facet. `incategory:` only matches the one
+    // flat category (105 hits for paintings) and `deepcategory:` walks the
+    // whole subtree — accurate, but slow enough to trip fetchJson's timeout.
+    // Folding the word into srsearch is approximate but fast and reliable.
+    const results = await searchFiles(withTypeKeyword('wikimediaCommons', query, type), page, signal)
     if (results.length === 0) return []
 
     // query.pages is keyed by pageid and unordered relative to the search

@@ -1,5 +1,6 @@
 import type { Artwork } from '../types/artwork'
 import { fetchJson } from '../lib/fetchJson'
+import { getTypeFilter } from '../lib/artTypes'
 import { PAGE_SIZE, type MuseumSource } from './types'
 
 // Harvard Art Museums requires an API key requested via a manual-approval
@@ -38,7 +39,7 @@ export const harvardSource: MuseumSource = {
   label: 'Harvard Art Museums',
   requiresKey: true,
 
-  async search(query, page, signal) {
+  async search(query, page, signal, type) {
     const params = new URLSearchParams({
       source: 'harvard',
       q: query || 'painting',
@@ -46,6 +47,11 @@ export const harvardSource: MuseumSource = {
       page: String(page + 1), // Harvard pages are 1-indexed
       hasimage: '1',
     })
+    // `classification` has to be allowlisted in api/museum.ts to survive the
+    // proxy. These values are Harvard's documented ones, not probed — there
+    // was no key available to verify against.
+    const classification = type && getTypeFilter('harvard', type)
+    if (classification) params.set('classification', classification)
     const url = `/api/museum?${params}`
     const json = await fetchJson<HarvardSearchResponse>('harvard', url, {}, signal)
 

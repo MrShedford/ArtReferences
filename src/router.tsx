@@ -1,5 +1,7 @@
 import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router'
 import type { SourceId } from './types/artwork'
+import type { ArtTypeId } from './lib/artTypes'
+import { isArtTypeId } from './lib/artTypes'
 import { allSources } from './sources'
 import { RootLayout } from './routes/RootLayout'
 import { SearchPage } from './routes/SearchPage'
@@ -23,6 +25,13 @@ export interface SearchParams {
    * which is a different thing and has to stay distinguishable.
    */
   sources?: string
+  /**
+   * The active art type (paintings, sculpture…). Absent means "all types",
+   * so the default URL stays a clean `/`. Unlike `sources` this isn't
+   * persisted — the museums someone picks are a standing preference, but a
+   * type filter is what they're looking for right now.
+   */
+  type?: ArtTypeId
 }
 
 /** Hand-rolled, matching api/museum.ts's allowlist discipline. No zod. */
@@ -40,6 +49,12 @@ function validateSearchParams(search: Record<string, unknown>): SearchParams {
       .split(',')
       .filter((id) => KNOWN_SOURCE_IDS.has(id))
       .join(',')
+  }
+
+  // Same discipline as `sources`: drop an unrecognised value rather than
+  // rejecting the URL, so a link from before a type was renamed still loads.
+  if (typeof search.type === 'string' && isArtTypeId(search.type)) {
+    params.type = search.type
   }
 
   return params
