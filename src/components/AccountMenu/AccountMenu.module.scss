@@ -9,35 +9,12 @@
   position: relative;
 }
 
-// The signed-in caption. Gone on the tab bar — the avatar already says whose
-// account it is — but the same element is the rail's hover tooltip, and there
-// it's worth keeping, naming the account rather than repeating "You".
-.tooltipOnly {
-  display: none;
-}
-
 // Matches the trigger's footprint so the nav doesn't shift when the session
-// resolves — a circle now, not the old avatar-plus-name pill.
+// resolves — and the profile link that replaces us when it resolves signed in
+// is the same size, so that swap doesn't shift it either.
 .skeleton {
   width: 3rem;
   height: 3rem;
-}
-
-.avatar,
-.avatarFallback {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.avatarFallback {
-  display: grid;
-  place-items: center;
-  background: v.$color-bg-elevated;
-  color: v.$color-accent;
-  font-weight: 600;
-  font-size: 0.85rem;
 }
 
 // Opens upward, above the tab bar it's anchored to. Right-aligned to the
@@ -60,34 +37,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-.item {
-  padding: v.$space-sm;
-  background: none;
-  border: none;
-  border-radius: v.$radius-sm;
-  color: v.$color-text;
-  text-align: left;
-  font-size: 0.85rem;
-  cursor: pointer;
-  @include m.focus-ring;
-
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  &:disabled {
-    color: v.$color-text-muted;
-    cursor: default;
-  }
-}
-
 @include m.respond-to(md) {
-  .tooltipOnly {
-    // Back in play as the tooltip. nav-item-chrome positions it absolutely and
-    // holds it at opacity 0 until hover, so it costs no layout.
-    display: revert;
-  }
-
   // The trigger is pinned to the bottom of the rail, so the menu flies out to
   // the right instead — upward would run it off the bottom of the viewport.
   .menu {

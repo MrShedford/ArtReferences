@@ -4,7 +4,6 @@ import { listsRoute } from '../router'
 import { useSession } from '../hooks/useSession'
 import { useCreateList, useDeleteList, useListItems, useLists, useRenameList } from '../hooks/useLists'
 import { UserApiError } from '../lib/userApi'
-import { DisplayNameField } from '../components/DisplayNameField/DisplayNameField'
 import { MasonryWall } from '../components/MasonryWall/MasonryWall'
 import { Lightbox } from '../components/Lightbox/Lightbox'
 import { GoogleSignInButton } from '../components/GoogleSignInButton/GoogleSignInButton'
@@ -108,18 +107,6 @@ export function ListsPage() {
   return (
     <>
       <header className={styles.header}>
-        <div className={styles.profile}>
-          {user.pictureUrl ? (
-            <img className={styles.avatar} src={user.pictureUrl} alt="" referrerPolicy="no-referrer" />
-          ) : (
-            <span className={styles.avatarFallback} aria-hidden="true" />
-          )}
-          <div>
-            <DisplayNameField />
-            <p className={styles.email}>{user.email}</p>
-          </div>
-        </div>
-
         <div className={styles.listRow} role="group" aria-label="Your lists">
           {areListsPending && <span className={styles.muted}>Loading lists...</span>}
           {lists.map((list) => (

@@ -1,0 +1,92 @@
+@use '../styles/variables' as v;
+@use '../styles/mixins' as m;
+
+// .loading / .spinner / .loadingLabel, same as the wall's — see the mixin.
+@include m.loading-spinner;
+
+// Left-aligned, not a centred card: this sits directly under the nav rail like
+// every other page's content, and /lists' header — where these fields used to
+// live — hung off the same left edge. DisplayNameField aligns its own name,
+// edit button and hint to the start, so everything lines up on that edge.
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: v.$space-md;
+
+  max-width: 26rem;
+  padding: v.$space-lg v.$space-md;
+}
+
+.srOnly {
+  @include m.visually-hidden;
+}
+
+// Bigger than either of the avatar's other homes (2rem in the nav, 3rem in the
+// old /lists header): on a page whose whole job is your account, it's the
+// subject rather than a marker beside something else.
+.avatar,
+.avatarFallback {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: v.$color-bg-elevated;
+  color: v.$color-accent;
+  font-weight: 600;
+  font-size: 2rem;
+}
+
+.email {
+  margin: 0;
+  font-size: 0.8rem;
+  color: v.$color-text-muted;
+}
+
+// Matches ListsPage's .secondary — the quiet outlined button this codebase uses
+// for anything that isn't the primary action on the page.
+.signOut {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: v.$space-xs v.$space-md;
+  border-radius: v.$radius-sm;
+  background: none;
+  border: 1px solid v.$color-border;
+  color: v.$color-text-muted;
+  cursor: pointer;
+  @include m.focus-ring;
+
+  &:hover:not(:disabled) {
+    color: v.$color-text;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.signedOut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: v.$space-md;
+  padding: v.$space-xl v.$space-md;
+}
+
+.signedOutHeading {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.message {
+  color: v.$color-text-muted;
+  text-align: center;
+  padding: 0 v.$space-md;
+  margin: 0;
+}

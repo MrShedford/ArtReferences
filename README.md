@@ -153,8 +153,9 @@ catch-all that swallowed those would hand back `index.html` instead.
 Sign in with Google, save artworks to lists, browse them at `/lists`. Every
 card gets a Save button: clicking it saves to an auto-created list called
 "Saved", and the chevron beside it picks a different list or makes a new one.
-Signed-in users can also set a display name that overrides the one Google
-supplies.
+`/profile` is the account surface — picture, email, sign out, and a display
+name that overrides the one Google supplies. Both tabs appear in the nav only
+once you're signed in.
 
 All of it is optional. With `DATABASE_URL`, `SESSION_SECRET` or
 `VITE_GOOGLE_CLIENT_ID` unset, `/api/user` returns 503, the sign-in button
@@ -252,8 +253,9 @@ resolve. The ten source ids are duplicated there for the same reason
   `Set-Cookie` read back via `getSetCookie()` — `Headers.forEach` joins
   repeated headers with `", "`, which silently corrupts cookies whose
   `Expires` date contains a comma.
-- `src/router.tsx` — two code-based routes (`/` and `/lists`). Code-based
-  rather than the file-based plugin: two routes don't justify a codegen step
+- `src/router.tsx` — three code-based routes (`/`, `/lists` and `/profile`).
+  Code-based rather than the file-based plugin: three routes don't justify a
+  codegen step
   plus a generated `routeTree.gen.ts` that lands inside `tsconfig.app.json`'s
   `include` and has to satisfy `noUnusedLocals`. The search query and enabled
   museums live in the URL, so a search survives navigating to `/lists` and

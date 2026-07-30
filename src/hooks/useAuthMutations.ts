@@ -1,13 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import type { SessionUser } from '../types/user'
 import { userApi } from '../lib/userApi'
 import { loadGoogleIdentity } from '../lib/loadGoogleIdentity'
+import { useLastBrowseSearch } from './useLastBrowseSearch'
 
 /** Everything a signed-in session puts in the cache, cleared together. */
 const USER_SCOPED_KEYS = [['session'], ['lists'], ['saved-map']] as const
 
 export function useSignIn() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const browseSearch = useLastBrowseSearch()
 
   return useMutation({
     mutationFn: (credential: string) =>
@@ -21,6 +25,15 @@ export function useSignIn() {
       queryClient.setQueryData(['session'], { user: data.user })
       void queryClient.invalidateQueries({ queryKey: ['lists'] })
       void queryClient.invalidateQueries({ queryKey: ['saved-map'] })
+
+      // Land on the wall. Signing in happens from three places — the nav
+      // popover, /lists, /profile — and the last two are sign-in prompts that
+      // have nothing left to say once you're through them.
+      //
+      // Carrying the remembered browse params rather than going to a bare `/`
+      // is the same move the nav's Home link makes: it means signing in from
+      // the popover mid-search doesn't wipe the query you were looking at.
+      void navigate({ to: '/', search: browseSearch })
     },
   })
 }

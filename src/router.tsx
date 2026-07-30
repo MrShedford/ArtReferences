@@ -6,9 +6,10 @@ import { allSources } from './sources'
 import { RootLayout } from './routes/RootLayout'
 import { SearchPage } from './routes/SearchPage'
 import { ListsPage } from './routes/ListsPage'
+import { ProfilePage } from './routes/ProfilePage'
 
 /**
- * Code-based routes rather than the file-based plugin. Two routes don't
+ * Code-based routes rather than the file-based plugin. Three routes don't
  * justify a codegen step plus a generated routeTree.gen.ts that lands inside
  * tsconfig.app.json's `include: ["src"]` and has to satisfy noUnusedLocals.
  * Type-safety of Link/useSearch is identical either way.
@@ -126,8 +127,19 @@ export const listsRoute = createRoute({
   component: ListsPage,
 })
 
+/**
+ * No validateSearch: the page takes no params, and the nav only offers it while
+ * signed in. Signed-out visitors typing the URL get a sign-in prompt from the
+ * component rather than a beforeLoad redirect — see ProfilePage.
+ */
+export const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  component: ProfilePage,
+})
+
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([searchRoute, listsRoute]),
+  routeTree: rootRoute.addChildren([searchRoute, listsRoute, profileRoute]),
   scrollRestoration: true,
   /**
    * Key the saved scroll offset by URL rather than by history entry.

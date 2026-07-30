@@ -10,10 +10,10 @@ const MAX_DISPLAY_NAME = 50
 /**
  * Read -> edit -> save, inline.
  *
- * Deliberately not inside AccountMenu: a text input within a role="menu" is an
- * a11y problem — menus expect menuitem children and arrow-key navigation, and
- * a typing target inside one traps screen readers. /lists is already the
- * "your account" surface, so it lives there.
+ * Deliberately not in the nav's account popover: a text input within a
+ * role="menu" is an a11y problem — menus expect menuitem children and arrow-key
+ * navigation, and a typing target inside one traps screen readers. It lives on
+ * /profile, which is the account surface and has room to be a real form field.
  */
 export function DisplayNameField() {
   const { user, isPending, label } = useSession()

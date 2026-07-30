@@ -5,6 +5,30 @@
 // this same rail — see the nav-item-chrome mixin.
 @include m.nav-item-chrome;
 
+// The signed-in caption. Gone on the tab bar — the avatar already says whose
+// account it is — but the same element is the rail's hover tooltip, and there
+// it's worth keeping, naming the account rather than repeating "You".
+.tooltipOnly {
+  display: none;
+}
+
+.avatar,
+.avatarFallback {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: v.$color-bg-elevated;
+  color: v.$color-accent;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
 // Base layout is the mobile tab bar: respond-to is min-width only, so the
 // small screen is what's written plainly and the rail is the enhancement.
 .nav {
@@ -51,6 +75,12 @@
 }
 
 @include m.respond-to(md) {
+  .tooltipOnly {
+    // Back in play as the tooltip. nav-item-chrome positions it absolutely and
+    // holds it at opacity 0 until hover, so it costs no layout.
+    display: revert;
+  }
+
   .nav {
     position: sticky;
     top: 0;
@@ -91,8 +121,8 @@
   .items > .account {
     // Pins the avatar to the bottom of the rail, away from the destinations.
     margin-top: auto;
-    // The trigger is icon-width rather than rail-width, so unlike the links it
-    // needs centring.
+    // Whatever's in this slot — the profile link or AccountMenu's trigger — is
+    // icon-width rather than rail-width, so it needs centring.
     display: flex;
     justify-content: center;
   }

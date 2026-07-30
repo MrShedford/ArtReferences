@@ -18,7 +18,7 @@ import styles from './AppNav.module.scss'
  * to the browse route and unmount when you leave it.
  */
 export function AppNav() {
-  const { isSignedIn } = useSession()
+  const { user, isSignedIn, label } = useSession()
   const browseSearch = useLastBrowseSearch()
   const location = useRouterState({ select: (state) => state.location })
 
@@ -95,7 +95,31 @@ export function AppNav() {
             containers splitting 50/50, which bunched the links into the left
             half. The rail pins it back to the bottom — see the md block. */}
         <li className={styles.account}>
-          <AccountMenu />
+          {/* Signed in the slot is a plain link to /profile, not a popover:
+              everything that used to be in the menu is a page now, and a
+              dropdown holding one item that navigates is just a slower link.
+              Signed out it stays AccountMenu, which exists to house Google's
+              fixed-size button — that can't be squeezed into a 4rem rail.
+              isSignedIn is false while the session is still loading, so
+              AccountMenu's skeleton keeps covering that moment. */}
+          {isSignedIn ? (
+            <NavItem to="/profile" label={label} ariaLabel={`Account: ${label}`} tooltipOnly>
+              {user?.pictureUrl ? (
+                <img
+                  className={styles.avatar}
+                  src={user.pictureUrl}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className={styles.avatarFallback} aria-hidden="true">
+                  {label.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+            </NavItem>
+          ) : (
+            <AccountMenu />
+          )}
         </li>
       </ul>
     </nav>
@@ -103,15 +127,36 @@ export function AppNav() {
 }
 
 interface NavItemProps {
-  to: '/' | '/lists'
+  to: '/' | '/lists' | '/profile'
   label: string
   children: ReactNode
   search?: SearchParams
   activeOptions?: { includeSearch: boolean }
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
+  /**
+   * Drop the caption on the tab bar, keep the tooltip on the rail. For the
+   * avatar: it's already its own caption, and the account name spelled out
+   * under it was noise on a bar where the other slots say one word.
+   */
+  tooltipOnly?: boolean
+  /**
+   * Accessible name, when it needs to say more than the caption does. The
+   * profile link's tooltip is just your name — enough beside your own avatar,
+   * not enough read aloud on its own.
+   */
+  ariaLabel?: string
 }
 
-function NavItem({ to, label, children, search, activeOptions, onClick }: NavItemProps) {
+function NavItem({
+  to,
+  label,
+  children,
+  search,
+  activeOptions,
+  onClick,
+  tooltipOnly,
+  ariaLabel,
+}: NavItemProps) {
   return (
     <Link
       to={to}
@@ -122,10 +167,13 @@ function NavItem({ to, label, children, search, activeOptions, onClick }: NavIte
       activeProps={{ 'data-active': true }}
       // The label span is the visible caption on mobile and the tooltip on
       // desktop; either way it's decorative, so the name lives here.
-      aria-label={label}
+      aria-label={ariaLabel ?? label}
     >
       {children}
-      <span className={styles.navLabel} aria-hidden="true">
+      <span
+        className={tooltipOnly ? `${styles.navLabel} ${styles.tooltipOnly}` : styles.navLabel}
+        aria-hidden="true"
+      >
         {label}
       </span>
     </Link>
