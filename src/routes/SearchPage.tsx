@@ -27,8 +27,19 @@ export function SearchPage() {
   const [draft, setDraft] = useState(q)
   const debouncedDraft = useDebouncedValue(draft, 350)
 
+  // The last q the draft is known to agree with. It's what tells the two
+  // effects below apart: a q that matches this one is our own commit landing,
+  // a q that doesn't is the URL moving underneath us.
+  const syncedQ = useRef(q)
+
   useEffect(() => {
+    // The URL changed from outside — Back, or the nav's Home clearing the
+    // query. Whatever is sitting in the debounce belongs to the query that was
+    // just discarded, so committing it would put the search straight back.
+    if (q !== syncedQ.current) return
     if (debouncedDraft === q) return
+
+    syncedQ.current = debouncedDraft
     void navigate({
       search: (prev) => ({ ...prev, q: debouncedDraft || undefined }),
       // Replace, not push: otherwise every settled keystroke is a history
@@ -37,9 +48,12 @@ export function SearchPage() {
     })
   }, [debouncedDraft, q, navigate])
 
-  // Back/forward changes the URL underneath us — follow it. During typing this
-  // is a no-op, since q only ever lands on a value the draft already holds.
+  // Back/forward and Home change the URL underneath us — follow it. During
+  // typing this is a no-op, since q only ever lands on a value the draft
+  // already holds.
   useEffect(() => {
+    if (q === syncedQ.current) return
+    syncedQ.current = q
     setDraft(q)
   }, [q])
 

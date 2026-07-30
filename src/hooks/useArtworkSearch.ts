@@ -4,7 +4,8 @@ import type { Artwork, SourceId } from '../types/artwork'
 import type { MuseumSource } from '../sources'
 import { allSources, isSourceAvailable } from '../sources'
 import type { ArtTypeId } from '../lib/artTypes'
-import { SESSION_SEED, createSeededRng, seededIndex, shuffleWithRng } from '../lib/random'
+import { createSeededRng, seededIndex, shuffleWithRng } from '../lib/random'
+import { useBrowseSeed } from './useBrowseSeed'
 import { getBrowseSubject, getBrowseTerm } from '../lib/browseTerms'
 
 export interface SourceStatus {
@@ -97,10 +98,11 @@ export function useArtworkSearch(
   // matches for "vermeer" under whatever page 6 happens to hold.
   const isBrowse = query.trim() === ''
 
-  // Seeded from SESSION_SEED, which is rolled once per page load, so a refresh
-  // gives a different wall while scrolling, route changes and StrictMode's
-  // double mount all keep the current one. Inert (0) outside browse mode.
-  const browseSeed = isBrowse ? SESSION_SEED : 0
+  // Seeded from the session's browse seed, which only changes on a page load or
+  // a Home tap from home — so scrolling, route changes and StrictMode's double
+  // mount all keep the current wall. Inert (0) outside browse mode.
+  const sessionSeed = useBrowseSeed()
+  const browseSeed = isBrowse ? sessionSeed : 0
 
   // Round-robin always led with whichever museum sits first in allSources, so
   // the top-left card came from the same place every visit. Shuffling the arms

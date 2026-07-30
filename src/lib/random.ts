@@ -1,15 +1,12 @@
 /**
- * One roll per page load, so refreshing the tab is what earns you a different
- * wall. Module scope rather than component state on purpose: it has to survive
- * StrictMode's double mount, route changes and back/forward without changing,
- * or the wall would rebuild underneath whoever is looking at it.
+ * Seeded helpers, all deterministic given a seed. The browse seed itself lives
+ * in useBrowseSeed, which owns when it's allowed to change.
  *
- * Everything downstream of this is deterministic. distributeIntoColumns only
- * leaves already-placed cards alone because the artwork list is append-only
- * (see its doc comment), so a bare Math.random() in the query path would
- * re-roll on every refetch and make cards hop between columns mid-scroll.
+ * Determinism is the point: distributeIntoColumns only leaves already-placed
+ * cards alone because the artwork list is append-only (see its doc comment), so
+ * a bare Math.random() in the query path would re-roll on every refetch and
+ * make cards hop between columns mid-scroll.
  */
-export const SESSION_SEED = (Math.random() * 2 ** 32) >>> 0
 
 export function hashSeed(value: string): number {
   let hash = 2166136261

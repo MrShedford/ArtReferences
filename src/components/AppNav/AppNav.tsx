@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
+import type { MouseEvent, ReactNode } from 'react'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { AccountMenu } from '../AccountMenu/AccountMenu'
 import { CollectionIcon, HomeIcon } from '../icons/Icons'
 import { useSession } from '../../hooks/useSession'
 import { useLastBrowseSearch } from '../../hooks/useLastBrowseSearch'
+import { rollBrowseSeed } from '../../hooks/useBrowseSeed'
 import type { SearchParams } from '../../router'
 import styles from './AppNav.module.scss'
 
@@ -19,23 +20,60 @@ import styles from './AppNav.module.scss'
 export function AppNav() {
   const { isSignedIn } = useSession()
   const browseSearch = useLastBrowseSearch()
+  const location = useRouterState({ select: (state) => state.location })
+
+  // Read straight off the location rather than off the remembered breadcrumb:
+  // while you're on the wall the two agree, but the breadcrumb lags the URL by
+  // an effect, and the whole question here is what the URL says *right now*.
+  const isOnBrowse = location.pathname === '/'
+  const currentBrowseSearch = isOnBrowse ? (location.search as SearchParams) : undefined
+  const hasQuery = Boolean(currentBrowseSearch?.q)
+
+  /**
+   * Home means three different things depending on where you are:
+   *
+   * - From /lists, it carries the wall's last query back with it, so you land
+   *   on the URL you left — the same results under the same scroll-restoration
+   *   key, so you keep your place.
+   * - Mid-search, it clears the query and drops you back into browsing. The
+   *   filters survive: which museums and what kind of work you're looking at
+   *   are settings, not part of the search you're backing out of.
+   * - Already browsing, there's nothing to navigate to, so it refreshes
+   *   instead — see handleHomeClick.
+   */
+  const homeSearch: SearchParams = isOnBrowse
+    ? { ...currentBrowseSearch, q: undefined }
+    : browseSearch
+
+  const handleHomeClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    // Leave modified clicks to the browser: cmd/ctrl-click opens a new tab, and
+    // a fresh wall in *this* one isn't what was asked for.
+    if (event.defaultPrevented || event.button !== 0) return
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    // Anywhere else the href is a real destination; let the Link do its job.
+    if (!isOnBrowse || hasQuery) return
+
+    event.preventDefault()
+    // A new seed is a new wall — new lead museum, new browse terms, new depth.
+    rollBrowseSeed()
+    // The URL doesn't change, so the router won't scroll for us, and a refresh
+    // that leaves you halfway down a wall you've never seen isn't one.
+    window.scrollTo({ top: 0 })
+  }
 
   return (
     <nav className={styles.nav} aria-label="Main">
       <ul className={styles.items}>
         <li>
-          {/* Carries the wall's last query back with it, so returning from
-              /lists lands on the URL you left — the same results, under the
-              same scroll-restoration key, so you keep your place.
-
-              includeSearch: false is what keeps the icon lit while a query is
+          {/* includeSearch: false is what keeps the icon lit while a query is
               active: TanStack compares search params for active state by
-              default, and there's a beat on first paint before the remembered
-              params catch up with the URL. */}
+              default, and the target search deliberately differs from the URL
+              whenever there's something for Home to clear. */}
           <NavItem
             to="/"
-            search={browseSearch}
+            search={homeSearch}
             activeOptions={{ includeSearch: false }}
+            onClick={handleHomeClick}
             label="Home"
           >
             <HomeIcon />
@@ -64,14 +102,16 @@ interface NavItemProps {
   children: ReactNode
   search?: SearchParams
   activeOptions?: { includeSearch: boolean }
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
-function NavItem({ to, label, children, search, activeOptions }: NavItemProps) {
+function NavItem({ to, label, children, search, activeOptions, onClick }: NavItemProps) {
   return (
     <Link
       to={to}
       search={search}
       activeOptions={activeOptions}
+      onClick={onClick}
       className={styles.navItem}
       activeProps={{ 'data-active': true }}
       // The label span is the visible caption on mobile and the tooltip on
