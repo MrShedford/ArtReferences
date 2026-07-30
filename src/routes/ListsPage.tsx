@@ -188,7 +188,11 @@ export function ListsPage() {
       </main>
 
       {selectedArtwork && (
-        <Lightbox artwork={selectedArtwork} onClose={() => setSelectedArtwork(null)} />
+        <Lightbox
+          key={selectedArtwork.uid}
+          artwork={selectedArtwork}
+          onClose={() => setSelectedArtwork(null)}
+        />
       )}
     </>
   )

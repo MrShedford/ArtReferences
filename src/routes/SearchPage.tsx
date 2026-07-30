@@ -182,7 +182,13 @@ export function SearchPage() {
       </main>
 
       {selectedArtwork && (
-        <Lightbox artwork={selectedArtwork} onClose={() => setSelectedArtwork(null)} />
+        // Keyed so the image cross-fade state can never carry over between two
+        // artworks, even if this ever stops being a conditional mount.
+        <Lightbox
+          key={selectedArtwork.uid}
+          artwork={selectedArtwork}
+          onClose={() => setSelectedArtwork(null)}
+        />
       )}
     </>
   )

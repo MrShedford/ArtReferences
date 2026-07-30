@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Artwork } from '../../types/artwork'
+import { getAspectRatio } from '../../lib/aspectRatios'
 import styles from './Lightbox.module.scss'
 
 interface LightboxProps {
@@ -9,6 +10,33 @@ interface LightboxProps {
 
 export function Lightbox({ artwork, onClose }: LightboxProps) {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+
+  // The wall's thumbnail is a guaranteed cache hit — the user was just looking
+  // at it — but fullUrl is a *different* URL for 9 of 10 sources, so it always
+  // starts cold. Show the thumb straight away against a box whose shape is
+  // already known, and cross-fade once the real image arrives.
+  const ratio = getAspectRatio(artwork)
+  // Nothing better to load: Wikimedia, plus any record whose adapter fell back
+  // to the thumb. One layer, and it carries the real alt text.
+  const fullSrc = artwork.fullUrl && artwork.fullUrl !== artwork.thumbUrl ? artwork.fullUrl : null
+  const [fullStatus, setFullStatus] = useState<'pending' | 'loaded' | 'failed'>('pending')
+
+  // Blur the thumb only while a bigger image is genuinely on its way. If there
+  // is none, or the fetch failed, the thumb is the artwork and must be sharp —
+  // an unconditional blur here left Wikimedia (and every adapter fallback)
+  // permanently out of focus.
+  const showingPlaceholder = fullSrc !== null && fullStatus === 'pending'
+  const thumbIsPrimary = fullSrc === null || fullStatus === 'failed'
+
+  // A cached full image can finish decoding before React attaches onLoad, which
+  // would strand it at opacity 0. Reopening the same artwork hits this every
+  // time, so the ref has to check for itself rather than trust the event.
+  // complete with a zero natural width means it resolved to nothing — a dead
+  // fullUrl, which these APIs hand out often enough to matter.
+  const markIfComplete = useCallback((node: HTMLImageElement | null) => {
+    if (!node?.complete) return
+    setFullStatus(node.naturalWidth > 0 ? 'loaded' : 'failed')
+  }, [])
 
   useEffect(() => {
     closeButtonRef.current?.focus()
@@ -44,7 +72,26 @@ export function Lightbox({ artwork, onClose }: LightboxProps) {
         </button>
 
         <div className={styles.imageColumn}>
-          <img src={artwork.fullUrl ?? artwork.thumbUrl} alt={artwork.alt || artwork.title} />
+          <div className={styles.frame} style={{ '--artwork-ratio': ratio } as CSSProperties}>
+            <img
+              className={styles.thumb}
+              src={artwork.thumbUrl}
+              alt={thumbIsPrimary ? artwork.alt || artwork.title : ''}
+              aria-hidden={thumbIsPrimary ? undefined : true}
+              data-placeholder={showingPlaceholder}
+            />
+            {fullSrc && fullStatus !== 'failed' && (
+              <img
+                className={styles.full}
+                src={fullSrc}
+                alt={artwork.alt || artwork.title}
+                data-loaded={fullStatus === 'loaded'}
+                ref={markIfComplete}
+                onLoad={() => setFullStatus('loaded')}
+                onError={() => setFullStatus('failed')}
+              />
+            )}
+          </div>
         </div>
 
         <div className={styles.infoColumn}>

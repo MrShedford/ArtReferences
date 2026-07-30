@@ -50,16 +50,97 @@
 
 .imageColumn {
   flex: 1 1 60%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   background: #000;
   min-width: 0;
+}
 
-  img {
-    max-width: 100%;
+// Sized entirely from CSS, so the dialog's geometry is final on the first
+// painted frame — nothing has to load for the layout to settle. Both the width
+// and the height cap are expressed in terms of the same ratio, so the box keeps
+// its exact shape whichever one ends up binding.
+//
+// Below md the dialog stacks, so a tall image would push the title and artist
+// off-screen; the cap is tighter there.
+// The placeholder thumb is deliberately overscaled, and a transform still
+// counts toward an ancestor's scrollable overflow even though it never affects
+// layout. Without this clip it reached past .dialog's `overflow: auto` and
+// raised an inner scrollbar for exactly as long as the image was loading, which
+// then vanished — reflowing the dialog — the moment the full image arrived.
+.frame {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: var(--artwork-ratio);
+  max-height: 55vh;
+  max-width: calc(55vh * var(--artwork-ratio));
+
+  @include m.respond-to(md) {
     max-height: 80vh;
-    object-fit: contain;
+    max-width: calc(80vh * var(--artwork-ratio));
+  }
+}
+
+.thumb,
+.full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+// Sharp by default. For Wikimedia — and for any record where the adapter fell
+// back, so thumbUrl and fullUrl are the same string — this element *is* the
+// artwork, not a stand-in, and there is no second layer coming to replace it.
+// Blurring it unconditionally is what left those dialogs permanently soft.
+//
+// While a larger image is genuinely in flight, the blur makes the upscaled
+// 400px thumb read as a deliberate placeholder and hides the interpolation.
+// Slightly overscaled so the blur's soft edge doesn't show against the column.
+.thumb[data-placeholder='true'] {
+  filter: blur(8px);
+}
+
+.full {
+  opacity: 0;
+}
+
+.full[data-loaded='true'] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .full {
+    transition: opacity 0.25s ease;
+  }
+
+  .thumb {
+    transition:
+      filter 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .backdrop {
+    animation: lightbox-backdrop-in 0.15s ease both;
+  }
+
+  .dialog {
+    animation: lightbox-dialog-in 0.18s ease-out both;
+  }
+}
+
+@keyframes lightbox-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
   }
 }
 
