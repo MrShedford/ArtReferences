@@ -1,7 +1,10 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { Artwork, SourceId } from '../types/artwork'
+import type { MuseumSource } from '../sources'
 import { allSources, isSourceAvailable } from '../sources'
+import { SESSION_SEED, createSeededRng, seededIndex, shuffleWithRng } from '../lib/random'
+import { getBrowseTerm } from '../lib/browseTerms'
 
 export interface SourceStatus {
   status: 'success' | 'error'
@@ -36,6 +39,35 @@ function interleave(bySource: Artwork[][]): Artwork[] {
 }
 
 /**
+ * How many pages deep a browse session may start each museum. Broad browse
+ * terms return thousands of results from every one of these collections, so a
+ * few pages of jitter is free variety; anything a source can't reach falls back
+ * to page 0 (see fetchSourcePage).
+ */
+const MAX_BROWSE_PAGE_OFFSET = 8
+
+/**
+ * One page from one museum. Browse mode starts each source at its own depth so
+ * the wall isn't the same top-24 on every visit — but a narrow collection can
+ * run out before that depth, and an empty array there would silently drop the
+ * museum from the wall (and on page 0, via getNextPageParam, could end the
+ * infinite scroll before it began). Falling back to the unoffset page costs an
+ * extra request only in the case where the offset actually overshot.
+ */
+async function fetchSourcePage(
+  source: MuseumSource,
+  query: string,
+  page: number,
+  offset: number,
+  signal: AbortSignal,
+): Promise<Artwork[]> {
+  if (offset === 0) return source.search(query, page, signal)
+  const offsetResults = await source.search(query, page + offset, signal)
+  if (offsetResults.length > 0) return offsetResults
+  return source.search(query, page, signal)
+}
+
+/**
  * Fans a query out to every enabled + available museum source in parallel,
  * via Promise.allSettled so one slow or broken museum can't block the rest.
  * Backed by React Query's infinite query for caching, retry, and dedup of
@@ -57,20 +89,49 @@ export function useArtworkSearch(
     [enabledSourceIds, configuredSourceIds],
   )
 
+  // Browse mode is the landing page with nothing typed. A typed search stays
+  // fully deterministic and relevance-ordered — jittering it would bury the best
+  // matches for "vermeer" under whatever page 6 happens to hold.
+  const isBrowse = query.trim() === ''
+
+  // Seeded from SESSION_SEED, which is rolled once per page load, so a refresh
+  // gives a different wall while scrolling, route changes and StrictMode's
+  // double mount all keep the current one. Inert (0) outside browse mode.
+  const browseSeed = isBrowse ? SESSION_SEED : 0
+
+  // Round-robin always led with whichever museum sits first in allSources, so
+  // the top-left card came from the same place every visit. Shuffling the arms
+  // — not the results inside them — varies who leads while each museum keeps
+  // its own ranking.
+  const orderedSources = useMemo(
+    () => (isBrowse ? shuffleWithRng(activeSources, createSeededRng(browseSeed)) : activeSources),
+    [activeSources, isBrowse, browseSeed],
+  )
+
   const infiniteQuery = useInfiniteQuery<ArtworkPage>({
-    queryKey: ['artworks', query, activeSources.map((s) => s.id).sort().join(',')],
+    // browseSeed belongs in the key: without it React Query would serve the
+    // previous visit's cached pages and none of the above would be observable.
+    queryKey: ['artworks', query, activeSources.map((s) => s.id).sort().join(','), browseSeed],
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       const page = pageParam as number
       const results = await Promise.allSettled(
-        activeSources.map((s) => s.search(query, page, signal)),
+        orderedSources.map((source) =>
+          fetchSourcePage(
+            source,
+            isBrowse ? getBrowseTerm(source.id, browseSeed) : query,
+            page,
+            isBrowse ? seededIndex(`page:${source.id}`, browseSeed, MAX_BROWSE_PAGE_OFFSET) : 0,
+            signal,
+          ),
+        ),
       )
 
       const statuses: Partial<Record<SourceId, SourceStatus>> = {}
       const bySource: Artwork[][] = []
 
       results.forEach((result, idx) => {
-        const source = activeSources[idx]
+        const source = orderedSources[idx]
         if (result.status === 'fulfilled') {
           statuses[source.id] = { status: 'success', count: result.value.length }
           bySource.push(result.value)

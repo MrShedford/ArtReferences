@@ -22,5 +22,8 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Tests run on node:test and import node builtins, which the app's
+  // vite/client-only `types` can't see — they're checked by tsconfig.node.json.
+  "exclude": ["src/**/*.test.ts"]
 }
